@@ -7,6 +7,7 @@ hexdump edit150.hex
 
 entry $8000
 entry $8003
+entry $8079
 entry $83D7
 entry $83E9
 entry $B76C
@@ -20,8 +21,12 @@ entry $80EE
 entry $9A89
 entry $971E
 entry $9746
+entry $BE78
+entry $BE88
+entry $837B
+entry $89E3
+entry $8C18
 
-byte $8079 1
 
 string $8009 4 ; "EDIT"
 string $800E 5 ; "1.50r"
