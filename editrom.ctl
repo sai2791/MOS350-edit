@@ -26,6 +26,23 @@ entry $BE88
 entry $837B
 entry $89E3
 entry $8C18
+entry $AE95 
+entry $B037
+entry $B218
+entry $B262
+entry $B28E
+entry $B2AC
+entry $B2E1
+
+byte $AE93
+byte $AE94
+byte $B033
+byte $B034
+byte $B035
+byte $B036
+byte $B261
+
+
 
 
 string $8009 4 ; "EDIT"
@@ -359,3 +376,5 @@ string $BEC4 3 ; ".ce"
 string $BEC8 8 ; "Page .r0"
 string $BED1 6 ; ".ff.en"
 string $9716 7 ; "Insert "
+string $B1F0 40
+
