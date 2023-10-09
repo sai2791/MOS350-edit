@@ -6,6 +6,7 @@ save edit150.asm
 hexdump edit150.hex
 
 entry $8000
+entry $B334
 entry $8003
 entry $8079
 entry $83D7
@@ -33,6 +34,27 @@ entry $B262
 entry $B28E
 entry $B2AC
 entry $B2E1
+entry $B321
+entry $B3AF
+entry $B3EA
+entry $B3f7
+entry $B533
+entry $B545
+entry $B5C9
+entry $BA52
+entry $BAB7
+entry $BAC4
+entry $BADA
+entry $BAEF
+
+
+
+byte $B3AA
+byte $B3A9
+byte $B3A8
+byte $B3AB
+byte $B3AC
+byte $B3AD
 
 byte $AE93
 byte $AE94
@@ -44,7 +66,7 @@ byte $B261
 
 
 
-
+string $B52A 8 ;
 string $8009 4 ; "EDIT"
 string $800E 5 ; "1.50r"
 string $8014 13 ; "(C)1989 Acorn"
@@ -377,4 +399,4 @@ string $BEC8 8 ; "Page .r0"
 string $BED1 6 ; ".ff.en"
 string $9716 7 ; "Insert "
 string $B1F0 40
-
+string $BAB5 1;

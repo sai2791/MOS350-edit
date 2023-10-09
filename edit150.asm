@@ -55,7 +55,7 @@ UPDATE          = $0035
 SCRNPY          = $0036
 SCRNX           = $0037
 SCRNY           = $0038
-L0039           = $0039
+LNBUFX          = $0039
 cursed          = $003A
 FILL            = $003B
 TINDEN          = $003C
@@ -75,17 +75,17 @@ OFFSET          = $0049
 PBOLD           = $004A
 LASTTAB         = $004B
 LINE            = $004C
-L004D           = $004D
+LINE+1          = $004D
 INDEXH          = $004E
 mark_count      = $004F
 MARKX           = $0050
 TSM             = $0051
 BSM             = $0052
-L0053           = $0053
-L0054           = $0054
-L0055           = $0055
-L0056           = $0056
-L0057           = $0057
+TEXPFLAG        = $0053
+SENSFLAG        = $0054
+BUTTFLAG        = $0055
+METAFLAG        = $0056
+REPLFLAG        = $0057
 L005A           = $005A
 ENDP            = $005B
 ENDP+1          = $005C
@@ -112,7 +112,6 @@ scratc+$0F      = $0070
 BUFF+6          = $0071
 BUFF+7          = $0072
 L0073           = $0073
-L0074           = $0074
 L007B           = $007B
 L007C           = $007C
 L007D           = $007D
@@ -182,8 +181,8 @@ CNPV            = $022E
 IND1V           = $0230
 IND2V           = $0232
 IND3V           = $0234
-L0400           = $0400
-L0464           = $0464
+FRBUFF          = $0400
+GRBUFF          = $0464
 nambuf          = $04C8
 oldsta          = $04FC
 oldsta+1        = $04FD
@@ -207,23 +206,25 @@ L052F           = $052F
 MACLST          = $0530
 MACLST+1        = $0531
 L056C           = $056C
-L05FE           = $05FE
-L05FF           = $05FF
+STRACC-2        = $05FE
+STRACC-1        = $05FF
 stracc          = $0600
-L0601           = $0601
+STRACC+1        = $0601
 L060A           = $060A
 L060D           = $060D
 L06A0           = $06A0
-L0700           = $0700
-L0706           = $0706
-L070C           = $070C
-L0712           = $0712
-L0718           = $0718
-L071E           = $071E
-L0728           = $0728
+sindexstk       = $0700
+SSTTLOSTK       = $0706
+SSTTHISTK       = $070C
+SCNTLOSTK       = $0712
+SCNTHISTK       = $0718
+FIELDMMXTAB     = $071E
+FIELDOFFTAB     = $0728
 SCRIM           = $0732
 SCRIM+1         = $0733
 machtype        = $0752
+L0753           = $0753
+PRMPTL          = $07E5
 L0C00           = $0C00
 L0D0D           = $0D0D
 L0D73           = $0D73
@@ -234,7 +235,6 @@ L183C           = $183C
 L187E           = $187E
 L1CFE           = $1CFE
 L2017           = $2017
-L2065           = $2065
 L20EA           = $20EA
 L24EA           = $24EA
 L2665           = $2665
@@ -256,7 +256,6 @@ L6575           = $6575
 L65A7           = $65A7
 L66A7           = $66A7
 L68A7           = $68A7
-L696C           = $696C
 L6974           = $6974
 L69A7           = $69A7
 L6AA7           = $6AA7
@@ -272,7 +271,6 @@ defvec          = $D940
 LDAB2           = $DAB2
 LE8FF           = $E8FF
 LEA00           = $EA00
-LEA1A           = $EA1A
 LF1BA           = $F1BA
 LFF20           = $FF20
 OSRDRM          = $FFB9
@@ -378,6 +376,7 @@ OSCLI           = $FFF7
                 JMP     OSBYTE
 
 .pbrkv          LDX     #$FF
+L807A = pbrkv+1
                 TXS
                 STZ     cursed
                 JSR     ackesc
@@ -623,8 +622,8 @@ OSCLI           = $FFF7
                 JSR     memsta
 
 .EDIToy         LDA     #$0D
-                STA     L0400
-                STA     L0464
+                STA     FRBUFF
+                STA     GRBUFF
                 STZ     INDEXH
                 STZ     MODFLG
                 LDA     #$03
@@ -640,7 +639,7 @@ OSCLI           = $FFF7
 
 .zippo          JSR     EDITmd
 
-                JMP     LB452
+                JMP     OLDTEXT
 
 .zappo          STZ     BRKACT
                 JSR     EDITmd
@@ -833,7 +832,7 @@ OSCLI           = $FFF7
                 LDA     TMAX
                 LDX     TMAX+1
                 CLV
-                JSR     paslnm
+.L836C          JSR     paslnm
 
                 JSR     prompt
 
@@ -986,7 +985,7 @@ OSCLI           = $FFF7
 .escSIM         STZ     cursed
                 JMP     ESCCON
 
-.L8470          JSR     OSRDCH
+.IndOSRDCH      JSR     OSRDCH
 
 .escTST         BIT     L00FF
                 BMI     escSET
@@ -1157,7 +1156,7 @@ OSCLI           = $FFF7
 
                 LDA     #$20
 .L8565          EOR     options
-                STA     options
+.domode         STA     options
                 PHX
                 PHY
                 TAY
@@ -1494,7 +1493,7 @@ EDCTBL = L8747+1
                 LDX     #$52
                 LDY     options,X
                 TXS
-                STX     L0039
+                STX     LNBUFX
                 BCS     EDEL0
 
                 BCS     L8720
@@ -2487,7 +2486,7 @@ L87E3 = BIGMES+1
 .OSBYTEwithY    LDY     #$00
                 JMP     OSBYTE
 
-.L95B4          LDA     #$DB
+.initus         LDA     #$DB
                 LDX     #$09
                 JSR     OSBYTEwithY
 
@@ -2550,7 +2549,7 @@ L9602 = L9601+1
                 SBC     GS+1
                 BCS     VDU23X
 
-                JMP     LB9F8
+                JMP     CHNRRERR
 
 .CURON          LDY     #$01
                 BRA     VDU231
@@ -2678,12 +2677,12 @@ L9602 = L9601+1
 .L96CA          LDX     L0080
                 RTS
 
-.L96CD          JSR     L8470
+.L96CD          JSR     IndOSRDCH
 
                 TAX
 .L96D1          BNE     L96DC
 
-                JSR     L8470
+                JSR     IndOSRDCH
 
                 CMP     #$00
                 BEQ     L96C8
@@ -2722,7 +2721,7 @@ L9602 = L9601+1
                 LDA     #$08
 .L9703          JSR     L8565
 
-.L9706          STZ     UPDATE
+.CstatU         STZ     UPDATE
 .STATUS         JSR     CSR0STATUSY
 
                 JSR     startI
@@ -2832,7 +2831,7 @@ L9602 = L9601+1
                 JSR     WIPELINE
 
                 LDX     #$00
-                LDY     PAGELE
+.PRMPTX         LDY     PAGELE
                 INY
                 JSR     CSRXY
 
@@ -5434,7 +5433,7 @@ LAA4F = LAA4E+1
                 STA     scratc+$0A,X
                 SEC
 .NUMLP          LDA     TEMP
-                SBC     LBBF7,X
+                SBC     TOPTBL,X
                 TAY
 .LAC7C          LDA     TEMP+1
                 SBC     WOPTBL,X
@@ -5617,7 +5616,7 @@ CMDS+2 = CMDS+1+1
                 ROR     L00A6
                 ROR     scratc+$0E
 .LAD91          ROL     L68A7,X
-                ADC     L0054
+                ADC     SENSFLAG
                 ADC     #$63
                 LDY     L69A7,X
                 EOR     (L00A7)
@@ -5979,7 +5978,7 @@ LAE58 = LAE57+1
                 TXA
                 BNE     QUEUCS
 
-                JSR     L8470
+                JSR     IndOSRDCH
 
                 STA     L0043
 .QUEUCS         SEC
@@ -6488,18 +6487,44 @@ LAE58 = LAE57+1
 
                 EQUS    "Bad use of stored name"
 
-                EQUB    $00,$20,$6D,$BC,$20,$A0,$99,$20
-                EQUB    $EA,$97
+                EQUB    $00
+
+.insrtF         JSR     MKREFUSE
+
+                JSR     FINEPO
+
+                JSR     promtF
 
                 EQUS    "to insert:"
 
-                EQUB    $EA,$20,$14,$84,$A5,$10,$85,$08
-                EQUB    $A5,$11,$85,$09,$A5,$12,$A6,$13
-                EQUB    $A0,$00,$2C,$7A,$80,$20,$6C,$83
-                EQUB    $86,$10,$84,$11,$20,$F2,$96,$A6
-                EQUB    $08,$A4,$09,$20,$10,$99,$4C,$47
-                EQUB    $98,$A9,$01,$85,$24,$20,$B4,$95
-                EQUB    $20,$FE,$97
+.LB334          NOP
+                JSR     READNS
+
+                LDA     GS
+                STA     ADDR
+                LDA     GS+1
+                STA     ADDR+1
+                LDA     GE
+                LDX     GE+1
+                LDY     #$00
+                BIT     L807A
+                JSR     L836C
+
+                STX     GS
+                STY     GS+1
+                JSR     MODIFY
+
+                LDX     ADDR
+                LDY     ADDR+1
+                JSR     GPBKXY
+
+                JMP     NORMAL
+
+                LDA     #$01
+                STA     BRKACT
+                JSR     initus
+
+                JSR     prompt
 
                 EQUS    "Command line"
 
@@ -6507,7 +6532,7 @@ LAE58 = LAE57+1
 
 .starCN         JSR     OSNEWL
 
-.LB377          LDA     #$2A
+.starlo         LDA     #$2A
                 JSR     OSWRCH
 
                 LDA     #$00
@@ -6515,33 +6540,45 @@ LAE58 = LAE57+1
                 LDX     #$97
                 JSR     OSWORD
 
-                BCS     LB39C
+                BCS     stares
 
                 LDA     LINBUFF
                 CMP     #$0D
-                BEQ     LB39F
+                BEQ     starex
 
                 LDX     #$00
                 LDY     #$05
                 JSR     OSCLI
 
-                BRA     LB377
+                BRA     starlo
 
                 BRK
                 EQUB    $05
 
                 INC     LFF20
-.LB39C          JSR     ackesc
+.stares         JSR     ackesc
 
-.LB39F          LDA     #$DA
+.starex         LDA     #$DA
                 LDX     #$00
                 JSR     OSBYTEwithY
 
                 JSR     VSTRING
 
-                TSB     PAJE+1
-                ORA     LEA1A
-                JSR     CHKSCR
+                EQUB    $85
+
+                EQUB    $04
+
+                EQUB    $03
+
+                EQUB    $0F
+
+                EQUB    $0D
+
+                EQUB    $1A
+
+                EQUB    $EA
+
+.LB3AF          JSR     CHKSCR
 
                 JSR     inited
 
@@ -6549,11 +6586,11 @@ LAE58 = LAE57+1
 
                 LDA     #$01
                 STA     cursed
-                JSR     L95B4
+                JSR     initus
 
-                JMP     L9706
+                JMP     CstatU
 
-                BRK
+.BADMOD         BRK
                 EQUB    $01
 
                 EQUS    "Only 0,1,3,4,6,7,D or K"
@@ -6561,36 +6598,91 @@ LAE58 = LAE57+1
 .LB3DB          EQUB    $00,$00,$07,$00,$00,$0E,$00
 
 .MODETB         EQUB    $00,$01,$00,$03,$04,$00,$06,$07
-                EQUB    $20,$FE,$97
+
+.GETMOD         JSR     prompt
 
                 EQUS    "New Mode:"
 
-                EQUB    $EA,$20,$70,$84,$20,$EE,$FF,$C9
-                EQUB    $38,$B0,$0E,$E9,$2F,$90,$BD,$C9
-                EQUB    $02,$F0,$B9,$C9,$05,$F0,$B5,$80
-                EQUB    $10,$29,$DF,$C9,$44,$F0,$08,$C9
-                EQUB    $4B,$D0,$A9,$A9,$02,$80,$02,$A9
-                EQUB    $05,$48,$A8,$B9,$E2,$B3,$48,$20
-                EQUB    $EB,$84,$A9,$82,$20,$F4,$FF,$E8
-                EQUB    $D0,$14,$C8,$D0,$11,$68,$48,$09
-                EQUB    $80,$AA,$A9,$85,$20,$F4,$FF,$E4
-                EQUB    $10,$98,$E5,$11,$90,$5A,$FA,$A9
-                EQUB    $07,$14,$2B,$68,$05,$2B,$20,$67
-                EQUB    $85,$20,$9C,$B1
+                EQUB    $EA
 
-.LB452          LDA     oldsta+3
+.LB3F7          JSR     IndOSRDCH
+
+                JSR     OSWRCH
+
+                CMP     #$38
+                BCS     SETKEY
+
+                SBC     #$2F
+                BCC     BADMOD
+
+                CMP     #$02
+                BEQ     BADMOD
+
+                CMP     #$05
+                BEQ     BADMOD
+
+                BRA     SETMOD
+
+.SETKEY         AND     #$DF
+                CMP     #$44
+                BEQ     SETTUT
+
+                CMP     #$4B
+                BNE     BADMOD
+
+                LDA     #$02
+                BRA     SETMOD
+
+.SETTUT         LDA     #$05
+.SETMOD         PHA
+                TAY
+                LDA     MODETB,Y
+                PHA
+                JSR     memsta
+
+                LDA     #$82
+                JSR     OSBYTE
+
+                INX
+                BNE     inTUBE
+
+                INY
+                BNE     inTUBE
+
+                PLA
+                PHA
+                ORA     #$80
+                TAX
+                LDA     #$85
+                JSR     OSBYTE
+
+                CPX     GS
+                TYA
+                SBC     GS+1
+                BCC     MODEsp
+
+.inTUBE         PLX
+                LDA     #$07
+                TRB     options
+                PLA
+                ORA     options
+                JSR     domode
+
+                JSR     EDITmd
+
+.OLDTEXT        LDA     oldsta+3
                 CMP     PAJE+1
-                BCC     LB4AA
+                BCC     NOOLD
 
                 CMP     HYMEM+1
-                BCS     LB4AA
+                BCS     NOOLD
 
                 CMP     oldsta+1
-                BCC     LB4AA
+                BCC     NOOLD
 
                 LDA     oldsta+1
                 CMP     PAJE+1
-                BCC     LB4AA
+                BCC     NOOLD
 
                 LDA     oldsta
                 STA     ARGP
@@ -6603,7 +6695,7 @@ LAE58 = LAE57+1
                 LDA     oldsta+3
                 SBC     ARGP+1
                 TAY
-                BCC     LB4AA
+                BCC     NOOLD
 
                 LDA     tstart
                 STA     VARP
@@ -6623,403 +6715,407 @@ LAE58 = LAE57+1
                 STZ     oldsta+3
                 JMP     EDITgs
 
-                JSR     STFILE
+.MODEsp         JSR     STFILE
 
                 BRK
                 EQUB    $02
 
                 EQUS    "No room"
 
-.LB4AA          BRK
+.NOOLD          BRK
                 EQUB    $02
 
                 EQUS    "No old text found"
 
                 EQUB    $00
 
-.LB4BE          STZ     INDEX
+.GETNUB         STZ     INDEX
                 STZ     LINE
-                STZ     L004D
-.LB4C4          LDY     INDEX
+                STZ     LINE+1
+.EDLIRE         LDY     INDEX
                 LDA     (TEMP),Y
                 CMP     #$0D
-                BEQ     LB4FC
+                BEQ     EDLIMV
 
                 CMP     #$3A
-                BCS     LB54D
+                BCS     EDLIBN
 
                 SBC     #$2F
-                BCC     LB54D
+                BCC     EDLIBN
 
                 STA     ATEMP
                 LDA     #$0A
                 LDX     #$00
                 LDY     #$00
                 CLC
-.LB4DD          PHA
+.EDLI10         PHA
                 TXA
                 ADC     LINE
                 TAX
                 TYA
-                ADC     L004D
+                ADC     LINE+1
                 TAY
-                BCS     LB54D
+                BCS     EDLIBN
 
                 PLA
                 DEC     A
-                BNE     LB4DD
+                BNE     EDLI10
 
                 TXA
                 ADC     ATEMP
                 STA     LINE
-                BCC     LB4F6
+                BCC     EDLNHI
 
                 INY
-                BEQ     LB54D
+                BEQ     EDLIBN
 
-.LB4F6          STY     L004D
+.EDLNHI         STY     LINE+1
                 INC     INDEX
-                BNE     LB4C4
+                BNE     EDLIRE
 
-.LB4FC          RTS
+.EDLIMV         RTS
 
                 LDA     #$01
                 STA     LINE
-                STZ     L004D
+                STZ     LINE+1
                 LDA     tstart
                 STA     STRING
                 LDA     tstart+1
                 STA     STRING+1
-.LB50B          LDA     (STRING)
+.LOKLINE        LDA     (STRING)
                 CMP     termin
-                BNE     LB517
+                BNE     LOKLI2
 
                 INC     LINE
-                BNE     LB517
+                BNE     LOKLI2
 
-                INC     L004D
-.LB517          INC     STRING
-                BNE     LB51D
+                INC     LINE+1
+.LOKLI2         INC     STRING
+                BNE     LOKLI3
 
                 INC     STRING+1
-.LB51D          LDA     STRING
+.LOKLI3         LDA     STRING
                 CMP     GS
                 LDA     STRING+1
                 SBC     GS+1
-                BCC     LB50B
+                BCC     LOKLINE
 
                 JSR     prompt
 
-                EOR     (L0074,X)
-                JSR     L696C
+                EQUS    "At line "
 
-                ROR     L2065
-                NOP
-                JSR     LBBC5
+                EQUB    $EA
+
+.LB533          JSR     WRITELINE
 
                 JSR     VSTRING
 
                 EQUS    ", new line:"
 
-                EQUB    $EA,$20,$1C,$B0,$20,$14,$84,$D0
-                EQUB    $1D
+                EQUB    $EA
 
-.LB54D          BRK
+.LB545          JSR     stopin
+
+                JSR     READNS
+
+                BNE     LOLI4
+
+.EDLIBN         BRK
                 EQUB    $01
 
                 EQUS    "Bad number"
 
-.LB559          BRK
+.EDLIBL         BRK
                 EQUB    $02
 
                 EQUS    "Line not found"
 
                 EQUB    $00
 
-.LB56A          JSR     LB4BE
+.LOLI4          JSR     GETNUB
 
                 SEC
                 LDA     LINE
                 SBC     #$01
                 STA     LINE
-                LDA     L004D
+                LDA     LINE+1
                 SBC     #$00
-                STA     L004D
-                BCC     LB54D
+                STA     LINE+1
+                BCC     EDLIBN
 
                 JSR     STFILE
 
                 JSR     LA96C
 
-.LB582          LDA     LINE
-                ORA     L004D
-                BEQ     LB59F
+.EDLIFW         LDA     LINE
+                ORA     LINE+1
+                BEQ     EDLIGO
 
-.LB588          LDA     #$01
+.EDLICR         LDA     #$01
                 JSR     TPFWDA
 
-                BCS     LB559
+                BCS     EDLIBL
 
                 LDA     ATEMP
                 CMP     termin
-                BNE     LB588
+                BNE     EDLICR
 
                 LDA     LINE
-                BNE     LB59B
+                BNE     EDLNHD
 
-                DEC     L004D
-.LB59B          DEC     LINE
-                BRA     LB582
+                DEC     LINE+1
+.EDLNHD         DEC     LINE
+                BRA     EDLIFW
 
-.LB59F          LDA     TSM
-                BNE     LB5A5
+.EDLIGO         LDA     TSM
+                BNE     EDLIGJ
 
                 LDA     #$04
-.LB5A5          STA     SCRNY
+.EDLIGJ         STA     SCRNY
                 JMP     GPFDTP
 
-.LB5AA          STZ     BOLDRQ
-                STZ     L0057
+.FRSTRINIT      STZ     BOLDRQ
+                STZ     REPLFLAG
                 STZ     LINEOT
                 STZ     UNDRRQ
                 STZ     OFFSET
-                STZ     L0054
-.LB5B6          STZ     CTLCHA
-                BRA     LB5BD
+                STZ     SENSFLAG
+.MININIT        STZ     CTLCHA
+                BRA     NEXTCH
 
-.LB5BA          JSR     LB6EF
+.GENNEXTCH      JSR     GENBYTE
 
-.LB5BD          LDY     CTLCHA
+.NEXTCH         LDY     CTLCHA
                 LDA     LINBUFF,Y
                 STA     ATEMP
                 INC     CTLCHA
                 CMP     #$0D
                 RTS
 
-                JSR     LB5AA
+.FINDTRANS      JSR     FRSTRINIT
 
-.LB5CC          STZ     mark_count
-                STZ     L0056
-                STZ     L0055
+.FINDPART       STZ     mark_count
+                STZ     METAFLAG
+                STZ     BUTTFLAG
                 LDA     ATEMP
                 CMP     #$0D
-                BEQ     LB624
+                BEQ     FIPAEXIT
 
                 CMP     #$2F
-                BEQ     LB622
+                BEQ     FIPAEND
 
                 CMP     #$5E
-                BNE     LB5E4
+                BNE     FIPANHA
 
-                INC     L0055
-                BRA     LB5E8
+                INC     BUTTFLAG
+                BRA     FIPAMUL
 
-.LB5E4          CMP     #$2A
-                BNE     LB5EF
+.FIPANHA        CMP     #$2A
+                BNE     FIPANMUL
 
-.LB5E8          INC     mark_count
+.FIPAMUL        INC     mark_count
                 LDX     #$80
-                JSR     LB5BA
+                JSR     GENNEXTCH
 
-.LB5EF          CMP     #$7E
-                BNE     LB5F8
+.FIPANMUL       CMP     #$7E
+                BNE     FIPANNOT
 
                 LDX     #$81
-                JSR     LB5BA
+                JSR     GENNEXTCH
 
-.LB5F8          CMP     #$5B
-                BNE     LB633
+.FIPANNOT       CMP     #$5B
+                BNE     FIPASIMP
 
-                INC     L0054
+                INC     SENSFLAG
                 LDX     #$86
-                JSR     LB6EF
+                JSR     GENBYTE
 
-                JSR     LB6EF
+                JSR     GENBYTE
 
                 STY     LASTTAB
-                JSR     LB5BD
+                JSR     NEXTCH
 
-.LB60B          JSR     LB733
+.FIPASELT       JSR     SIMPLEITEM
 
                 LDA     ATEMP
                 CMP     #$5D
-                BNE     LB60B
+                BNE     FIPASELT
 
-                DEC     L0054
+                DEC     SENSFLAG
                 LDA     BOLDRQ
                 LDY     LASTTAB
                 STA     stracc,Y
-                JSR     LB5BD
+                JSR     NEXTCH
 
-                BRA     LB636
+                BRA     FIFIFEEL
 
-.LB622          INC     L0057
-.LB624          JSR     LB6ED
+.FIPAEND        INC     REPLFLAG
+.FIPAEXIT       JSR     TERMGEN
 
-                JSR     LB5BD
+                JSR     NEXTCH
 
                 LDA     BOLDRQ
                 STA     TINDEN
-                LDA     L0057
-                BNE     LB68F
+                LDA     REPLFLAG
+                BNE     REPLPART
 
                 RTS
 
-.LB633          JSR     LB733
+.FIPASIMP       JSR     SIMPLEITEM
 
-.LB636          LDA     L0055
-                BEQ     LB63F
+.FIFIFEEL       LDA     BUTTFLAG
+                BEQ     FIFICO
 
                 LDX     #$8B
-                JSR     LB6EF
+                JSR     GENBYTE
 
-.LB63F          LDA     L0056
-                BEQ     LB659
+.FIFICO         LDA     METAFLAG
+                BEQ     FIFIOFFI
 
                 LDX     LINEOT
                 CPX     #$0A
-                BCS     LB5CC
+                BCS     FINDPART
 
                 INC     LINEOT
                 LDA     OFFSET
-                STA     L0728,X
+                STA     FIELDOFFTAB,X
                 LDA     mark_count
-                BNE     LB65E
+                BNE     FIFIMULF
 
                 LDA     UNDRRQ
-                STA     L071E,X
-.LB659          INC     OFFSET
-.LB65B          JMP     LB5CC
+                STA     FIELDMMXTAB,X
+.FIFIOFFI       INC     OFFSET
+.FINDPCH        JMP     FINDPART
 
-.LB65E          INC     UNDRRQ
+.FIFIMULF       INC     UNDRRQ
                 LDA     UNDRRQ
                 CMP     #$05
-                BCS     LB66F
+                BCS     FRSTERR
 
                 ORA     #$80
-                STA     L071E,X
+                STA     FIELDMMXTAB,X
                 STZ     OFFSET
-                BRA     LB65B
+                BRA     FINDPCH
 
-.LB66F          BRK
+.FRSTERR        BRK
                 EQUB    $01
 
                 EQUS    "Too many find multiples"
 
                 EQUB    $00
 
-.LB689          JSR     LB5BD
+.REPANXCH       JSR     NEXTCH
 
-.LB68C          JSR     LB6EF
+.REPAGENB       JSR     GENBYTE
 
-.LB68F          LDA     #$FF
-                STA     L0054
+.REPLPART       LDA     #$FF
+                STA     SENSFLAG
                 LDA     ATEMP
                 CMP     #$0D
-                BEQ     LB6ED
+                BEQ     TERMGEN
 
                 LDX     #$88
                 CMP     #$26
-                BEQ     LB689
+                BEQ     REPANXCH
 
                 CMP     #$5C
-                BNE     LB6A9
+                BNE     REPANS
 
-                JSR     LB5BD
+                JSR     NEXTCH
 
                 TAX
-                BRA     LB689
+                BRA     REPANXCH
 
-.LB6A9          LDX     #$87
+.REPANS         LDX     #$87
                 CMP     #$25
-                BNE     LB6C1
+                BNE     RPNFLD
 
-                JSR     LB6EF
+                JSR     GENBYTE
 
-                JSR     LB5BD
+                JSR     NEXTCH
 
                 SEC
                 SBC     #$30
-                BCC     LB6D2
+                BCC     FIELDERR
 
                 CMP     LINEOT
-                BCS     LB6D2
+                BCS     FIELDERR
 
                 TAX
-                BPL     LB689
+                BPL     REPANXCH
 
-.LB6C1          JSR     LB7BE
+.RPNFLD         JSR     CHARACTERSPECI
 
                 STX     PBOLD
                 TXA
-                BPL     LB68C
+                BPL     REPAGENB
 
                 LDX     #$89
-                JSR     LB6EF
+                JSR     GENBYTE
 
                 LDX     PBOLD
-                BRA     LB68C
+                BRA     REPAGENB
 
-.LB6D2          BRK
+.FIELDERR       BRK
                 EQUB    $01
 
                 EQUS    "Bad replace field number"
 
                 EQUB    $00
 
-.LB6ED          LDX     #$8C
-.LB6EF          LDY     BOLDRQ
-                LDA     L0054
-                BNE     LB713
+.TERMGEN        LDX     #$8C
+.GENBYTE        LDY     BOLDRQ
+                LDA     SENSFLAG
+                BNE     GENBSNS
 
                 CPX     #$41
-                BCC     LB713
+                BCC     GENBSNS
 
                 CPX     #$7B
-                BCS     LB713
+                BCS     GENBSNS
 
                 CPX     #$5B
-                BCC     LB705
+                BCC     GENBNSN
 
                 CPX     #$61
-                BCC     LB713
+                BCC     GENBSNS
 
-.LB705          TXA
+.GENBNSN        TXA
                 ORA     #$20
                 TAX
                 LDA     #$8A
                 STA     stracc,Y
                 INY
                 INC     BOLDRQ
-                BEQ     LB720
+                BEQ     GENBERR
 
-.LB713          TXA
+.GENBSNS        TXA
                 STA     stracc,Y
-                BPL     LB71B
+                BPL     GENBNMET
 
-                INC     L0056
-.LB71B          INC     BOLDRQ
-                BEQ     LB720
+                INC     METAFLAG
+.GENBNMET       INC     BOLDRQ
+                BEQ     GENBERR
 
                 RTS
 
-.LB720          BRK
+.GENBERR        BRK
                 EQUB    $01
 
                 EQUS    "Syntax incorrect"
 
                 EQUB    $00
 
-.LB733          LDA     ATEMP
+.SIMPLEITEM     LDA     ATEMP
                 CMP     #$7E
-                BNE     LB752
+                BNE     SIITNNOT
 
                 LDX     #$81
-                JSR     LB6EF
+                JSR     GENBYTE
 
-                JSR     LB5BD
+                JSR     NEXTCH
 
-                BNE     LB752
+                BNE     SIITNNOT
 
                 BRK
                 EQUB    $01
@@ -7028,13 +7124,13 @@ LAE58 = LAE57+1
 
                 EQUB    $00
 
-.LB752          CMP     #$5C
-                BNE     LB776
+.SIITNNOT       CMP     #$5C
+                BNE     SIITNS
 
-                INC     L0054
-                JSR     LB5BD
+                INC     SENSFLAG
+                JSR     NEXTCH
 
-                BNE     LB76C
+                BNE     SIITNM
 
                 BRK
                 EQUB    $01
@@ -7043,121 +7139,121 @@ LAE58 = LAE57+1
 
                 EQUB    $00
 
-.LB76C          TAX
-                JSR     LB5BD
+.SIITNM         TAX
+                JSR     NEXTCH
 
-                JSR     LB6EF
+                JSR     GENBYTE
 
-                DEC     L0054
+                DEC     SENSFLAG
                 RTS
 
-.LB776          LDX     #$82
+.SIITNS         LDX     #$82
                 CMP     #$2E
-                BEQ     LB788
+                BEQ     SIITWILD
 
                 LDX     #$83
                 CMP     #$40
-                BEQ     LB788
+                BEQ     SIITWILD
 
                 LDX     #$84
                 CMP     #$23
-                BNE     LB78E
+                BNE     SIITNWIL
 
-.LB788          JSR     LB5BD
+.SIITWILD       JSR     NEXTCH
 
-                JMP     LB6EF
+                JMP     GENBYTE
 
-.LB78E          JSR     LB7BE
+.SIITNWIL       JSR     CHARACTERSPECI
 
                 STX     PBOLD
                 LDA     ATEMP
                 CMP     #$2D
-                BNE     LB7B1
+                BNE     SIITCGEN
 
-                INC     L0054
+                INC     SENSFLAG
                 LDX     #$85
-                JSR     LB6EF
+                JSR     GENBYTE
 
-                JSR     LB5BD
+                JSR     NEXTCH
 
                 LDX     PBOLD
-                JSR     LB6EF
+                JSR     GENBYTE
 
-                JSR     LB7BE
+                JSR     CHARACTERSPECI
 
-                JSR     LB6EF
+                JSR     GENBYTE
 
-                DEC     L0054
+                DEC     SENSFLAG
                 RTS
 
-.LB7B1          TXA
-                BPL     LB7BB
+.SIITCGEN       TXA
+                BPL     GENBYJ
 
                 LDX     #$89
-                JSR     LB6EF
+                JSR     GENBYTE
 
                 LDX     PBOLD
-.LB7BB          JMP     LB6EF
+.GENBYJ         JMP     GENBYTE
 
-.LB7BE          STZ     COUNT
+.CHARACTERSPECI STZ     COUNT
                 LDA     ATEMP
-                BMI     LB7F5
+                BMI     CHSPBY
 
                 CMP     #$7C
-                BNE     LB7D6
+                BNE     CHRSCO
 
-                JSR     LB5BD
+                JSR     NEXTCH
 
-                BEQ     LB802
+                BEQ     CHRSER
 
                 CMP     #$21
-                BNE     LB7E3
+                BNE     CHRSSO
 
                 INC     COUNT
-                JSR     LB5BD
+                JSR     NEXTCH
 
-.LB7D6          CMP     #$24
-                BEQ     LB7F3
+.CHRSCO         CMP     #$24
+                BEQ     CHSPCR
 
                 CMP     #$7C
-                BNE     LB7F5
+                BNE     CHSPBY
 
-                JSR     LB5BD
+                JSR     NEXTCH
 
-                BEQ     LB802
+                BEQ     CHRSER
 
-.LB7E3          CMP     #$3F
-                BNE     LB7EB
+.CHRSSO         CMP     #$3F
+                BNE     NOTQUE
 
                 LDA     #$7F
-                BRA     LB7F5
+                BRA     CHSPBY
 
-.LB7EB          BCC     LB7F5
+.NOTQUE         BCC     CHSPBY
 
                 AND     #$DF
                 SBC     #$40
-                BRA     LB7F5
+                BRA     CHSPBY
 
-.LB7F3          LDA     termin
-.LB7F5          PHA
-                JSR     LB5BD
+.CHSPCR         LDA     termin
+.CHSPBY         PHA
+                JSR     NEXTCH
 
                 PLA
                 LDY     COUNT
-                BEQ     LB800
+                BEQ     CHRSEX
 
                 ORA     #$80
-.LB800          TAX
+.CHRSEX         TAX
                 RTS
 
-.LB802          BRK
+.CHRSER         BRK
                 EQUB    $01
 
                 EQUS    "Error with |"
 
                 EQUB    $00
 
-.LB811          LDY     #$00
+.SEARCH         LDY     #$00
 .LB813          STZ     FILL
                 LDA     XEFF
                 STA     DIFF
@@ -7165,240 +7261,240 @@ LAE58 = LAE57+1
                 LDA     LASTSP
                 STA     CENTRE
                 SBC     TEXTP+1
-                BCC     LB848
+                BCC     SRCHCT
 
-                LDA     L0053
-                BNE     LB840
+                LDA     TEXPFLAG
+                BNE     SRCHFL
 
-                JSR     LBA35
+                JSR     MvetoFoundPos
 
                 LDA     GS
                 STA     STRING
                 LDA     GS+1
                 STA     STRING+1
-                INC     L0053
+                INC     TEXPFLAG
                 LDA     ENDP
                 STA     TEXTP
                 LDA     ENDP+1
                 STA     TEXTP+1
                 LDY     #$00
-                BRA     LB848
+                BRA     SRCHCT
 
-.LB840          SEC
+.SRCHFL         SEC
                 RTS
 
-.LB842          INC     DIFF
-                BNE     LB848
+.SRCHL1         INC     DIFF
+                BNE     SRCHCT
 
                 INC     CENTRE
-.LB848          JSR     escTST
+.SRCHCT         JSR     escTST
 
                 LDA     stracc,Y
                 CMP     #$8C
-                BEQ     LB867
+                BEQ     SRCHFD
 
                 CMP     #$80
-                BEQ     LB8C2
+                BEQ     SRCHMI
 
-                JSR     LB8E5
+                JSR     COMPMOBJ
 
-                BEQ     LB842
+                BEQ     SRCHL1
 
-.LB85B          LDX     FILL
-                BNE     LB882
+.SRCHIM         LDX     FILL
+                BNE     SRCHFM
 
                 INC     XEFF
-                BNE     LB811
+                BNE     SEARCH
 
                 INC     LASTSP
-                BRA     LB811
+                BRA     SEARCH
 
-.LB867          LDA     XEFF
-                STA     L0706
+.SRCHFD         LDA     XEFF
+                STA     SSTTLOSTK
                 LDA     LASTSP
-                STA     L070C
+                STA     SSTTHISTK
                 SEC
                 LDA     DIFF
                 SBC     XEFF
-                STA     L0712
+                STA     SCNTLOSTK
                 LDA     CENTRE
                 SBC     LASTSP
-                STA     L0718
+                STA     SCNTHISTK
                 CLC
                 RTS
 
-.LB882          STY     L0055
+.SRCHFM         STY     BUTTFLAG
                 CLC
-                LDA     L0706,X
-                ADC     L0712,X
+                LDA     SSTTLOSTK,X
+                ADC     SCNTLOSTK,X
                 STA     DIFF
-                LDA     L070C,X
-                ADC     L0718,X
+                LDA     SSTTHISTK,X
+                ADC     SCNTHISTK,X
                 STA     CENTRE
-                LDA     L0700,X
+                LDA     sindexstk,X
                 TAY
-                JSR     LB8E5
+                JSR     COMPMOBJ
 
-                BNE     LB8AA
+                BNE     SRCHBK
 
                 LDX     FILL
-                INC     L0712,X
-                BNE     LB842
+                INC     SCNTLOSTK,X
+                BNE     SRCHL1
 
-                INC     L0718,X
-                BRA     LB842
+                INC     SCNTHISTK,X
+                BRA     SRCHL1
 
-.LB8AA          LDX     L0055
-                LDA     L05FF,X
+.SRCHBK         LDX     BUTTFLAG
+                LDA     STRACC-1,X
                 CMP     #$8B
-                BNE     LB8BE
+                BNE     SRCHBC
 
                 INY
                 LDX     FILL
-                LDA     L0712,X
-                ORA     L0718,X
-                BNE     LB848
+                LDA     SCNTLOSTK,X
+                ORA     SCNTHISTK,X
+                BNE     SRCHCT
 
-.LB8BE          DEC     FILL
-                BRA     LB85B
+.SRCHBC         DEC     FILL
+                BRA     SRCHIM
 
-.LB8C2          INC     FILL
+.SRCHMI         INC     FILL
                 LDX     FILL
                 INY
                 TYA
-                STA     L0700,X
+                STA     sindexstk,X
                 LDA     DIFF
-                STA     L0706,X
+                STA     SSTTLOSTK,X
                 LDA     CENTRE
-                STA     L070C,X
-                STZ     L0712,X
-                STZ     L0718,X
-                JSR     LB8E5
+                STA     SSTTHISTK,X
+                STZ     SCNTLOSTK,X
+                STZ     SCNTHISTK,X
+                JSR     COMPMOBJ
 
-                JMP     LB848
+                JMP     SRCHCT
 
-.LB8E1          PLP
-.LB8E2          LDA     #$01
+.COMDFS         PLP
+.COMDFL         LDA     #$01
                 RTS
 
-.LB8E5          LDA     DIFF
+.COMPMOBJ       LDA     DIFF
                 CMP     ENDP
-                BNE     LB8F1
+                BNE     COMOCO
 
                 LDA     CENTRE
                 CMP     ENDP+1
-                BEQ     LB8E2
+                BEQ     COMDFL
 
-.LB8F1          LDA     stracc,Y
+.COMOCO         LDA     stracc,Y
                 CMP     #$81
                 PHP
-                BNE     LB8FA
+                BNE     COMONN
 
                 INY
-.LB8FA          INY
-                LDA     L05FF,Y
-                BMI     LB906
+.COMONN         INY
+                LDA     STRACC-1,Y
+                BMI     COMOME
 
                 CMP     (DIFF)
-                BNE     LB97D
+                BNE     CMOPRN
 
-                BRA     LB981
+                BRA     CMOPRY
 
-.LB906          CMP     #$82
-                BEQ     LB981
+.COMOME         CMP     #$82
+                BEQ     CMOPRY
 
                 CMP     #$8A
-                BEQ     LB93E
+                BEQ     COMSEN
 
                 CMP     #$83
-                BEQ     LB94A
+                BEQ     COMOAL
 
                 CMP     #$8B
-                BEQ     LB8E1
+                BEQ     COMDFS
 
                 CMP     #$84
-                BEQ     LB962
+                BEQ     CMODG1
 
                 CMP     #$85
-                BEQ     LB92C
+                BEQ     CMOSUB
 
                 CMP     #$86
-                BEQ     LB96E
+                BEQ     CMOSET
 
                 INY
-                LDA     L05FF,Y
+                LDA     STRACC-1,Y
                 CMP     (DIFF)
-                BNE     LB97D
+                BNE     CMOPRN
 
-                BEQ     LB981
+                BEQ     CMOPRY
 
-.LB92C          INY
+.CMOSUB         INY
                 INY
                 LDA     (DIFF)
-                CMP     L05FE,Y
-                BCC     LB97D
+                CMP     STRACC-2,Y
+                BCC     CMOPRN
 
-                CMP     L05FF,Y
-                BCC     LB981
+                CMP     STRACC-1,Y
+                BCC     CMOPRY
 
-                BNE     LB97D
+                BNE     CMOPRN
 
-                BRA     LB981
+                BRA     CMOPRY
 
-.LB93E          INY
+.COMSEN         INY
                 LDA     (DIFF)
                 ORA     #$20
-                CMP     L05FF,Y
-                BNE     LB97D
+                CMP     STRACC-1,Y
+                BNE     CMOPRN
 
-                BRA     LB981
+                BRA     CMOPRY
 
-.LB94A          LDA     (DIFF)
+.COMOAL         LDA     (DIFF)
                 CMP     #$5F
-                BEQ     LB981
+                BEQ     CMOPRY
 
                 CMP     #$41
-                BCC     LB964
+                BCC     CMODG2
 
                 CMP     #$7B
-                BCS     LB97D
+                BCS     CMOPRN
 
                 CMP     #$5B
-                BCC     LB981
+                BCC     CMOPRY
 
                 CMP     #$61
-                BCC     LB97D
+                BCC     CMOPRN
 
-                BRA     LB981
+                BRA     CMOPRY
 
-.LB962          LDA     (DIFF)
-.LB964          CMP     #$30
-                BCC     LB97D
+.CMODG1         LDA     (DIFF)
+.CMODG2         CMP     #$30
+                BCC     CMOPRN
 
                 CMP     #$3A
-                BCS     LB97D
+                BCS     CMOPRN
 
-                BRA     LB981
+                BRA     CMOPRY
 
-.LB96E          LDA     stracc,Y
+.CMOSET         LDA     stracc,Y
                 STA     LASTTAB
                 INY
-.LB974          JSR     LB8E5
+.CMOSEL         JSR     COMPMOBJ
 
-                BEQ     LB97F
+                BEQ     CMOSEY
 
                 CPY     LASTTAB
-                BNE     LB974
+                BNE     CMOSEL
 
-.LB97D          PLP
+.CMOPRN         PLP
                 RTS
 
-.LB97F          LDY     LASTTAB
-.LB981          PLA
+.CMOSEY         LDY     LASTTAB
+.CMOPRY         PLA
                 AND     #$02
                 RTS
 
-                JSR     LBA35
+.CHKNREP        JSR     MvetoFoundPos
 
                 LDA     #$01
                 STA     MODFLG
@@ -7407,103 +7503,103 @@ LAE58 = LAE57+1
                 LDA     CENTRE
                 STA     GE+1
                 LDA     TINDEN
-                STA     L0039
-.LB998          LDA     GS
+                STA     LNBUFX
+.CHNRLP         LDA     GS
                 CMP     XEFF
                 LDA     GS+1
                 SBC     LASTSP
-                BCS     LB9F8
+                BCS     CHNRRERR
 
-                LDY     L0039
-                INC     L0039
+                LDY     LNBUFX
+                INC     LNBUFX
                 LDA     stracc,Y
-                BPL     LB9EE
+                BPL     CHNRSI
 
                 CMP     #$8C
-                BEQ     LBA2E
+                BEQ     CHNREX
 
                 CMP     #$87
-                BEQ     LB9C2
+                BEQ     CHNRFI
 
                 CMP     #$88
-                BEQ     LB9BE
+                BEQ     CHNRFO
 
-                INC     L0039
-                LDA     L0601,Y
-                BRA     LB9EE
+                INC     LNBUFX
+                LDA     STRACC+1,Y
+                BRA     CHNRSI
 
-.LB9BE          LDY     #$00
-                BRA     LBA05
+.CHNRFO         LDY     #$00
+                BRA     CHNRAM
 
-.LB9C2          INC     L0039
-                LDA     L0601,Y
+.CHNRFI         INC     LNBUFX
+                LDA     STRACC+1,Y
                 TAX
-                LDA     L071E,X
-                BMI     LBA02
+                LDA     FIELDMMXTAB,X
+                BMI     CHNRMF
 
                 TAY
-                BEQ     LB9E1
+                BEQ     CHNRMS
 
                 CLC
-                LDA     L0706,Y
-                ADC     L0712,Y
+                LDA     SSTTLOSTK,Y
+                ADC     SCNTLOSTK,Y
                 STA     TEMP
-                LDA     L070C,Y
-                ADC     L0718,Y
-                BNE     LB9E7
+                LDA     SSTTHISTK,Y
+                ADC     SCNTHISTK,Y
+                BNE     CHNRTM
 
-.LB9E1          LDA     XEFF
+.CHNRMS         LDA     XEFF
                 STA     TEMP
                 LDA     LASTSP
-.LB9E7          STA     TEMP+1
-.LB9E9          LDY     L0728,X
+.CHNRTM         STA     TEMP+1
+.LB9E9          LDY     FIELDOFFTAB,X
 LB9EA = LB9E9+1
                 LDA     (TEMP),Y
-.LB9EE          STA     (GS)
+.CHNRSI         STA     (GS)
                 INC     GS
-                BNE     LB998
+                BNE     CHNRLP
 
                 INC     GS+1
-                BRA     LB998
+                BRA     CHNRLP
 
-.LB9F8          BRK
+.CHNRRERR       BRK
                 EQUB    $02
 
                 EQUS    "No room"
 
                 EQUB    $00
 
-.LBA02          AND     #$7F
+.CHNRMF         AND     #$7F
                 TAY
-.LBA05          LDA     L0706,Y
+.CHNRAM         LDA     SSTTLOSTK,Y
                 STA     ARGP
-                LDA     L070C,Y
+                LDA     SSTTHISTK,Y
                 STA     ARGP+1
                 LDA     GS
                 STA     VARP
                 LDA     GS+1
                 STA     VARP+1
                 CLC
-                LDA     L0712,Y
+                LDA     SCNTLOSTK,Y
                 TAX
                 ADC     GS
                 STA     GS
-                LDA     L0718,Y
+                LDA     SCNTHISTK,Y
                 TAY
                 ADC     GS+1
                 STA     GS+1
                 JSR     COPYBK
 
-                JMP     LB998
+                JMP     CHNRLP
 
-.LBA2E          RTS
+.CHNREX         RTS
 
-                JSR     EDRDCH
+.LBA2F          JSR     EDRDCH
 
                 ORA     #$20
                 RTS
 
-.LBA35          LDX     XEFF
+.MvetoFoundPos  LDX     XEFF
                 LDY     LASTSP
                 JMP     GPFDXY
 
@@ -7513,96 +7609,261 @@ LB9EA = LB9E9+1
 
                 EQUS    "Global replace:"
 
-                EQUB    $EA,$20,$4A,$84,$20,$46,$84,$D0
-                EQUB    $0F,$CD,$64,$04,$F0,$66,$B9,$64
-                EQUB    $04,$91,$06,$C8,$10,$F8,$A0,$00
-                EQUB    $B1,$06,$99,$64,$04,$C8,$C0,$64
-                EQUB    $D0,$F6,$20,$C9,$B5,$20,$B0,$BC
-                EQUB    $64,$4C,$64,$4D,$64,$53,$A6,$12
-                EQUB    $A4,$13,$86,$14,$84,$15,$20,$11
-                EQUB    $B8,$B0,$15,$E6,$4C,$D0,$02,$E6
-                EQUB    $4D,$A5,$57,$D0,$06,$A6,$16,$A4
-                EQUB    $17,$80,$E7,$20,$85,$B9,$80,$DE
-                EQUB    $A6,$00,$A4,$01,$20,$10,$99,$20
-                EQUB    $47,$98,$20,$FF,$AD,$AE,$E5,$07
-                EQUB    $E8,$20,$06,$98,$20,$EA,$20,$C5
-                EQUB    $BB,$20,$06,$98
+                EQUB    $EA
+
+.LBA52          JSR     READLS
+
+                JSR     readIN
+
+                BNE     NEWGR
+
+                CMP     GRBUFF
+                BEQ     NOBUFF
+
+.OLDGR          LDA     GRBUFF,Y
+                STA     (TEMP),Y
+                INY
+                BPL     OLDGR
+
+                LDY     #$00
+.NEWGR          LDA     (TEMP),Y
+                STA     GRBUFF,Y
+                INY
+                CPY     #$64
+                BNE     NEWGR
+
+                JSR     FINDTRANS
+
+                JSR     dfblok
+
+                STZ     LINE
+                STZ     LINE+1
+                STZ     TEXPFLAG
+.GREPLP         LDX     GE
+                LDY     GE+1
+.GREPNX         STX     XEFF
+                STY     LASTSP
+                JSR     SEARCH
+
+                BCS     GREPEX
+
+                INC     LINE
+                BNE     GREPNH
+
+                INC     LINE+1
+.GREPNH         LDA     REPLFLAG
+                BNE     GREPRP
+
+                LDX     DIFF
+                LDY     CENTRE
+                BRA     GREPNX
+
+.GREPRP         JSR     CHKNREP
+
+                BRA     GREPLP
+
+.GREPEX         LDX     STRING
+                LDY     STRING+1
+                JSR     GPBKXY
+
+                JSR     NORMAL
+
+                JSR     SCRNUD
+
+.LBAAE          LDX     PRMPTL
+                INX
+                JSR     PRMPTX
+
+                EQUS    " "
+
+                EQUB    $EA
+
+.LBAB7          JSR     WRITELINE
+
+                JSR     PRMPTX
 
                 EQUS    " found"
 
-                EQUB    $EA,$60,$00,$01
+                EQUB    $EA
+
+.LBAC4          RTS
+
+.NOBUFF         BRK
+                EQUB    $01
 
                 EQUS    "No previous string"
 
-                EQUB    $00,$20,$FE,$97
+                EQUB    $00
+
+.FINDREPLACE    JSR     prompt
 
                 EQUS    "Find and replace:"
 
-                EQUB    $EA,$9C,$53,$07,$20,$4A,$84,$20
-                EQUB    $46,$84,$D0,$0F,$CD,$00,$04,$F0
-                EQUB    $C6,$B9,$00,$04,$91,$06,$C8,$10
-                EQUB    $F8,$A0,$00,$B1,$06,$99,$00,$04
-                EQUB    $C8,$C0,$64,$D0,$F6,$20,$C9,$B5
-                EQUB    $20,$31,$BE,$20,$A0,$99,$A5,$4C
-                EQUB    $85,$37,$A5,$04,$85,$5F,$85,$5B
-                EQUB    $A5,$05,$85,$60,$85,$5C,$85,$53
-                EQUB    $A6,$12,$A4,$13,$86,$14,$84,$15
-                EQUB    $20,$11,$B8,$B0,$62,$20,$35,$BA
-                EQUB    $E6,$4C,$D0,$02,$E6,$4D,$AD,$53
-                EQUB    $07,$D0,$4E,$20,$1F,$BD,$A5,$52
-                EQUB    $85,$38,$20,$FF,$AD,$A9,$05,$85
-                EQUB    $35,$20,$3E,$BE,$20,$2F,$98,$20
-                EQUB    $16,$96,$20,$2F,$BA,$C9,$65,$D0
-                EQUB    $18,$8D,$53,$07,$A9,$01,$85,$4C
-                EQUB    $64,$4D,$20,$6D,$BC,$A5,$57,$D0
-                EQUB    $05,$20,$79,$BE,$E6,$57,$4C,$97
-                EQUB    $BB,$C9,$63,$D0,$06,$A6,$16,$A4
-                EQUB    $17,$80,$A9,$C9,$72,$D0,$D3,$20
-                EQUB    $6D,$BC,$A5,$57,$D0,$03,$20,$79
-                EQUB    $BE,$20,$85,$B9,$4C,$2E,$BB,$20
-                EQUB    $47,$98,$A9,$06,$85,$35,$20,$FF
-                EQUB    $AD,$20,$08,$97,$AD,$53,$07,$F0
-                EQUB    $03,$4C,$AE,$BA,$AE,$E5,$07,$E8
-                EQUB    $20,$06,$98
+                EQUB    $EA
+
+.LBAEF          STZ     L0753
+                JSR     READLS
+
+                JSR     readIN
+
+                BNE     NEWFR
+
+                CMP     FRBUFF
+                BEQ     NOBUFF
+
+.OLDFR          LDA     FRBUFF,Y
+                STA     (TEMP),Y
+                INY
+                BPL     OLDFR
+
+                LDY     #$00
+.NEWFR          LDA     (TEMP),Y
+                STA     FRBUFF,Y
+                INY
+                CPY     #$64
+                BNE     NEWFR
+
+                JSR     FINDTRANS
+
+                JSR     TEMPSX
+
+                JSR     FINEPO
+
+                LDA     LINE
+                STA     SCRNX
+                LDA     TMAX
+                STA     TEXTP
+                STA     ENDP
+                LDA     TMAX+1
+                STA     TEXTP+1
+                STA     ENDP+1
+                STA     TEXPFLAG
+.IMRPRL         LDX     GE
+                LDY     GE+1
+.IMRPCL         STX     XEFF
+                STY     LASTSP
+                JSR     SEARCH
+
+                BCS     IMRPNF
+
+                JSR     MvetoFoundPos
+
+                INC     LINE
+                BNE     LBB44
+
+                INC     LINE+1
+.LBB44          LDA     L0753
+                BNE     IMRPRP
+
+                JSR     NORMAX
+
+                LDA     BSM
+                STA     SCRNY
+                JSR     SCRNUD
+
+                LDA     #$05
+                STA     UPDATE
+                JSR     LBE3E
+
+                JSR     CSRSCR
+
+                JSR     CURON
+
+.IMRPPR         JSR     LBA2F
+
+                CMP     #$65
+                BNE     IMRPNC
+
+                STA     L0753
+                LDA     #$01
+                STA     LINE
+                STZ     LINE+1
+                JSR     MKREFUSE
+
+                LDA     REPLFLAG
+                BNE     LBB7C
+
+                JSR     LBE79
+
+                INC     REPLFLAG
+.LBB7C          JMP     IMRPRP
+
+.IMRPNC         CMP     #$63
+                BNE     LBB89
+
+                LDX     DIFF
+                LDY     CENTRE
+                BRA     IMRPCL
+
+.LBB89          CMP     #$72
+                BNE     IMRPPR
+
+                JSR     MKREFUSE
+
+                LDA     REPLFLAG
+                BNE     IMRPRP
+
+                JSR     LBE79
+
+.IMRPRP         JSR     CHKNREP
+
+                JMP     IMRPRL
+
+.IMRPNF         JSR     NORMAL
+
+                LDA     #$06
+                STA     UPDATE
+                JSR     SCRNUD
+
+                JSR     STATUS
+
+                LDA     L0753
+                BEQ     LBBB2
+
+                JMP     LBAAE
+
+.LBBB2          LDX     PRMPTL
+                INX
+                JSR     PRMPTX
 
                 EQUS    " Not found"
 
                 EQUB    $EA,$60
 
-.LBBC5          JSR     startI
+.WRITELINE      JSR     startI
 
                 LDX     #$04
                 STX     STRING
-.LBBCC          STZ     STRING+1
-.LBBCE          SEC
+.WOPRNEXT       STZ     STRING+1
+.WOPRLOOP       SEC
                 LDA     LINE
-                SBC     LBBF7,X
+                SBC     TOPTBL,X
                 TAY
-                LDA     L004D
+                LDA     LINE+1
                 SBC     WOPTBL,X
-                BCC     LBBE4
+                BCC     WOPRDIGI
 
                 STY     LINE
-                STA     L004D
+                STA     LINE+1
                 INC     STRING+1
-                BRA     LBBCE
+                BRA     WOPRLOOP
 
-.LBBE4          LDA     STRING+1
-                BNE     LBBEC
+.WOPRDIGI       LDA     STRING+1
+                BNE     WOPRGEN
 
                 DEC     STRING
-                BPL     LBBF3
+                BPL     WOPRCONT
 
-.LBBEC          ORA     #$30
+.WOPRGEN        ORA     #$30
                 JSR     OSWRCH
 
                 STZ     STRING
-.LBBF3          DEX
-                BPL     LBBCC
+.WOPRCONT       DEX
+                BPL     WOPRNEXT
 
                 RTS
 
-.LBBF7          ORA     (ARGP,X)
+.TOPTBL         ORA     (ARGP,X)
                 STZ     L00E8
 .LBBFB          BPL     LBBFD
 
@@ -7610,12 +7871,12 @@ WOPTBL = LBBFB+1
 .LBBFD          BRK
                 EQUB    $00
 
-.MARKUPDATE     JSR     LBC2A
+.MARKUPDATE     JSR     MKUDCH
 
-.LBC04          STZ     MARKSB
+.MKUDKN         STZ     MARKSB
                 LDX     MARKX
-.LBC08          DEX
-                BMI     LBC29
+.MKUDLP         DEX
+                BMI     MKUDEX
 
                 LDY     SMATLO,X
                 STY     UMATLO,X
@@ -7623,7 +7884,7 @@ WOPTBL = LBBFB+1
                 LDA     SMATHI,X
                 STA     UMATHI,X
                 SBC     GE+1
-                BCS     LBC08
+                BCS     MKUDLP
 
                 INC     MARKSB
                 SEC
@@ -7633,11 +7894,11 @@ WOPTBL = LBBFB+1
                 LDA     UMATHI,X
                 SBC     SPACES
                 STA     UMATHI,X
-                BCS     LBC08
+                BCS     MKUDLP
 
-.LBC29          RTS
+.MKUDEX         RTS
 
-.LBC2A          SEC
+.MKUDCH         SEC
                 LDA     GE
                 SBC     GS
                 STA     JUSLEN
@@ -7648,19 +7909,19 @@ WOPTBL = LBBFB+1
 
 .CLRMAK         JSR     FINEPO
 
-                JSR     LBC2A
+                JSR     MKUDCH
 
-                JSR     LBC04
+                JSR     MKUDKN
 
                 LDX     MARKX
                 CPX     #$02
-                BNE     LBC61
+                BNE     CLRMCO
 
                 LDA     UMATLO+1
                 CMP     UMATLO
                 LDA     UMATHI+1
                 SBC     UMATHI
-                BCS     LBC61
+                BCS     CLRMCO
 
                 LDA     UMATLO
                 LDY     UMATLO+1
@@ -7670,7 +7931,7 @@ WOPTBL = LBBFB+1
                 LDY     UMATHI+1
                 STA     UMATHI+1
                 STY     UMATHI
-.LBC61          LDA     MARKX
+.CLRMCO         LDA     MARKX
                 STA     NUMMAR
                 STZ     MARKX
                 JSR     STATUS
@@ -7678,7 +7939,7 @@ WOPTBL = LBBFB+1
                 LDA     NUMMAR
 .MKRFEX         RTS
 
-                LDA     MARKX
+.MKREFUSE       LDA     MARKX
                 BEQ     MKRFEX
 
                 BRK
@@ -7965,7 +8226,7 @@ WOPTBL = LBBFB+1
                 STA     SCRNX
 .TEMPSE         RTS
 
-                JSR     prompt
+.LBE3E          JSR     prompt
 
                 EQUS    "C(ontinue), E(nd of file replace), R(eplace) or ESCAPE"
 
@@ -7973,7 +8234,7 @@ WOPTBL = LBBFB+1
 
 .LBE78          RTS
 
-                JSR     prompt
+.LBE79          JSR     prompt
 
                 EQUS    "Replace by:"
 
@@ -7983,11 +8244,11 @@ WOPTBL = LBBFB+1
 
                 JSR     readIN
 
-                JSR     LB5B6
+                JSR     MININIT
 
                 LDA     TINDEN
                 STA     BOLDRQ
-                JMP     LB68F
+                JMP     REPLPART
 
                 EQUS    ".he"
 
