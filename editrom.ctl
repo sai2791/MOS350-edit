@@ -46,8 +46,42 @@ entry $BAB7
 entry $BAC4
 entry $BADA
 entry $BAEF
+entry $B241 ; LOADfi
+entry $964F 
+entry $975C
+entry $976B
+entry $97A4
+entry $9780
+entry $97D1
+entry $97FC
+entry $9B12
+entry $9B26 
+entry $A0F8 
+entry $A604
+entry $B0E8
+entry $B126
+entry $B151
+entry $B167
+entry $B19F
+entry $B1E4
+entry $B1DE
+entry $B1D8
+entry $B1ED
+entry $B299
+entry $B35D
+entry $B397
+entry $B3B8
+entry $B4FD
 
 
+
+
+word $874B 
+word $874D
+
+; startCB
+word $b397 ; starCB
+byte $b399 2
 
 byte $B3AA
 byte $B3A9
@@ -64,9 +98,20 @@ byte $B035
 byte $B036
 byte $B261
 
+byte $964C
+byte $964D
+byte $964E
+byte $9B26
+
+byte $9B0F
+byte $AE93 3
+
+; NUMERL
+byte $AD1F 13
+byte $AD2C 13
 
 
-string $B52A 8 ;
+entry $AE96
 string $8009 4 ; "EDIT"
 string $800E 5 ; "1.50r"
 string $8014 13 ; "(C)1989 Acorn"
@@ -238,7 +283,7 @@ string $94F9 8 ; "shf-COPY"
 string $9502 19 ; "Cursor editing with"
 string $9516 77 ; "cursor keys & COPY is enabled.User defined soft keys are available as normal."
 string $9564 42 ; "All characters except ESCAPE are put into "
-tring $9716 7 ; "Insert "
+string $9716 7 ; "Insert "
 string $9723 7 ; "Over   "
 string $9732 19 ; "     Cursor Editing"
 string $9752 9 ; "One mark "
@@ -351,9 +396,9 @@ string $A237 4 ; " to "
 string $A23C 5 ; " the "
 string $A292 30 ; "Screen, Printer, As is, Help ?"
 string $A2C9 19 ; "Continuous, Paged ?"
-tring $A3B9 12 ; "Print done. "
-tring $AC08 23 ; "Press SHIFT to continue"
-tring $B1F0 40 ; "Clear text [Y,shf-f9 (exec),D (discard)]"
+string $A3B9 12 ; "Print done. "
+string $AC08 23 ; "Press SHIFT to continue"
+string $B1F0 40 ; "Clear text [Y,shf-f9 (exec),D (discard)]"
 string $B24A 22 ; "Overwrite text [Y,f2]:"
 string $B277 22 ; "Type filename to load:"
 string $B2A3 8 ; "to save:"
@@ -365,7 +410,7 @@ string $B3C4 23 ; "Only 0,1,3,4,6,7,D or K"
 string $B3ED 9 ; "New Mode:"
 string $B4A3 7 ; "No room"
 string $B4AC 17 ; "No old text found"
-tring $B52A 8 ; "At line "
+string $B52A 8 ; "At line "
 string $B539 11 ; ", new line:"
 string $B54F 10 ; "Bad number"
 string $B55B 14 ; "Line not found"
@@ -398,5 +443,93 @@ string $BEC4 3 ; ".ce"
 string $BEC8 8 ; "Page .r0"
 string $BED1 6 ; ".ff.en"
 string $9716 7 ; "Insert "
-string $B1F0 40
 string $BAB5 1;
+string $AD39 26; CHARS
+
+;CMDS
+string $AD53 2
+word $AD55
+string $AD57 2
+word $AD59
+string $AD5B 2
+word $AD5D
+string $AD5F 2
+word $AD61
+string $AD63 2
+word $AD65
+string $AD67 2
+word $AD69
+string $AD6B 2
+word $AD6D
+string $AD6F 2
+word $AD71
+string $AD73 2
+word $AD75
+string $AD77 2
+word $AD79
+string $AD7B 2
+word $AD7D
+string $AD7F 2
+word $AD81
+string $AD83 2
+word $AD85
+string $AD87 2
+word $AD89
+string $AD8B 2
+word $AD8D
+string $AD8F 2
+word $AD91
+string $AD93 2
+word $AD95
+string $AD97 2
+word $AD99
+string $AD9B 2
+word $AD9D
+string $AD9F 2
+word $ADA1
+string $ADA3 2
+word $ADA5
+string $ADA7 2
+word $ADA9
+string $ADAB 2
+word $ADAD
+string $ADAF 2
+word $ADB1 
+string $ADB3 2
+word $ADB5 
+string $ADB7 2
+word $ADB9 
+string $ADBB 2
+word $ADBD
+string $ADBF 2
+word $ADC1
+string $ADC3 2
+word $ADC5
+string $ADC7 2
+word $ADC9
+string $ADCB 2
+word $ADCD
+string $ADCF 2
+word $ADD1
+string $ADD3 2
+word $ADD5 
+string $ADD7 2
+word $ADD9 
+string $ADDB 2
+word $ADDD
+string $ADDF 2
+word $ADE1
+string $ADE3 2
+word $ADE5
+string $ADE7 2
+word $ADE9
+string $ADEB 2
+word $ADED
+string $ADEF 2
+word $ADF1 
+string $ADF3 2
+word $ADF5 
+string $ADF7 2
+word $ADF9 
+string $ADFB 2
+word $ADFD
