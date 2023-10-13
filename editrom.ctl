@@ -72,17 +72,15 @@ entry $B35D
 entry $B397
 entry $B3B8
 entry $B4FD
+entry $87E3 ; BIGMESS
 
-
-
-
-word $874B 
-word $874D
+word $874B 48 
+word $87AB 29 
 
 ; startCB
 word $b397 ; starCB
 byte $b399 2
-
+byte $A145
 byte $B3AA
 byte $B3A9
 byte $B3A8
@@ -109,9 +107,35 @@ byte $AE93 3
 ; NUMERL
 byte $AD1F 13
 byte $AD2C 13
+byte $85C6 6
 
+byte $A350 3
+entry $A353
 
+byte $AA4A 3 ; VDUDON
+entry $AA4D
+
+byte $AA5C 12
+entry $AA68
+
+byte $BBF7 5
+byte $BBFC 5
+
+entry $BD07 ; CLEARMARKS
+entry $BD0D ; MKDEL
+entry $BD27 ; MKCPY
+entry $BD79 ; MKMVE
+
+entry $854E ; CRTOGG
+
+entry $85CD
+
+entry $8663
+entry $86D8
 entry $AE96
+
+entry $A242
+
 string $8009 4 ; "EDIT"
 string $800E 5 ; "1.50r"
 string $8014 13 ; "(C)1989 Acorn"
@@ -533,3 +557,11 @@ string $ADF7 2
 word $ADF9 
 string $ADFB 2
 word $ADFD
+;;
+string $8D0D 2
+byte $8D0F
+;;
+entry $961E
+;;
+byte $96AB 3
+entry $96AE

@@ -110,8 +110,8 @@ scratc+$0E      = $006F
 scratc+$0F      = $0070
 BUFF+6          = $0071
 BUFF+7          = $0072
-L007B           = $007B
-L007C           = $007C
+ANOTHSTRING     = $007B
+ANOTHSTRING+1   = $007C
 L007D           = $007D
 L007E           = $007E
 L007F           = $007F
@@ -120,13 +120,11 @@ termin          = $0081
 L0083           = $0083
 L0084           = $0084
 L009D           = $009D
-L00B5           = $00B5
 L00C9           = $00C9
-L00E8           = $00E8
 L00F2           = $00F2
 L00F4           = $00F4
 L00FD           = $00FD
-L00FF           = $00FF
+ESCFLG          = $00FF
 L019F           = $019F
 L01A0           = $01A0
 USERV           = $0200
@@ -185,9 +183,6 @@ STRACC-2        = $05FE
 STRACC-1        = $05FF
 stracc          = $0600
 STRACC+1        = $0601
-L060A           = $060A
-L060D           = $060D
-L06A0           = $06A0
 sindexstk       = $0700
 SSTTLOSTK       = $0706
 SSTTHISTK       = $070C
@@ -200,21 +195,14 @@ SCRIM+1         = $0733
 machtype        = $0752
 L0753           = $0753
 PRMPTL          = $07E5
-L0C00           = $0C00
 L1818           = $1818
 L183C           = $183C
 L187E           = $187E
 L1CFE           = $1CFE
-L2017           = $2017
-L24EA           = $24EA
-L638C           = $638C
-L6974           = $6974
 L7F0D           = $7F0D
 L7F13           = $7F13
 L7FA9           = $7FA9
 defvec          = $D940
-LE8FF           = $E8FF
-LEA00           = $EA00
 OSRDRM          = $FFB9
 VDUCHR          = $FFBC
 OSEVEN          = $FFBF
@@ -362,14 +350,14 @@ L807A = pbrkv+1
 
                 JSR     STFILE
 
-.L80BD          JSR     VSTRING
+.L80BD          JSR     VSTRNG
 
                 NOP
                 JSR     CSR0STATUSY
 
-                JSR     csr0ST
+                JSR     L8C1A
 
-                JSR     VSTRING
+                JSR     VSTRNG
 
                 NOP
                 LDX     #$80
@@ -914,7 +902,7 @@ L807A = pbrkv+1
 
                 BCC     escCLR
 
-.escSET         JSR     VSTRING
+.escSET         JSR     VSTRNG
 
                 ORA     LA5EA
                 BIT     L00C9
@@ -929,7 +917,7 @@ L807A = pbrkv+1
 
 .IndOSRDCH      JSR     OSRDCH
 
-.escTST         BIT     L00FF
+.escTST         BIT     ESCFLG
                 BMI     escSET
 
                 RTS
@@ -1064,7 +1052,7 @@ L807A = pbrkv+1
                 DEY
                 BNE     brksb1
 
-.VSTRING        PLA
+.VSTRNG         PLA
                 STA     STRING
                 PLA
                 STA     STRING+1
@@ -1090,14 +1078,14 @@ L807A = pbrkv+1
                 STA     (OSHWM)
                 STA     (TMAX)
                 LDA     #$40
-                JSR     L8565
+                JSR     pre-domode
 
                 JSR     STFILE
 
                 JMP     STATUS
 
                 LDA     #$20
-.L8565          EOR     options
+.pre-domode     EOR     options
 .domode         STA     options
                 PHX
                 PHY
@@ -1163,14 +1151,16 @@ L807A = pbrkv+1
                 PHA
                 ASL     A
                 TAY
-                JSR     VSTRING
+                JSR     VSTRNG
 
-                TRB     L0C00
-                AND     ADDR+1,X
-                TSB     LB9EA
-                STA     L007B
+                EQUB    $1C,$00,$0C,$35,$09,$0C
+
+                EQUB    $EA
+
+.DEFVAL1        LDA     L87AB,Y
+                STA     ANOTHSTRING
                 LDA     L87AC,Y
-                STA     L007C
+                STA     ANOTHSTRING+1
                 JSR     LA113
 
                 BRA     TUTDON
@@ -1267,7 +1257,7 @@ L807A = pbrkv+1
                 LDY     SCRNY
                 JSR     WIPETA
 
-                STZ     SCRNX
+.EHRCSU         STZ     SCRNX
                 JSR     CURDWN
 
 .ECHRUP         LDA     UPDATE
@@ -1346,7 +1336,7 @@ L807A = pbrkv+1
 
 .DELLIX         JSR     DELABV
 
-                STZ     SCRNX
+.DELLIN         STZ     SCRNX
                 LDA     (GE)
                 CMP     termin
                 BNE     DELLIX
@@ -1422,36 +1412,31 @@ L807A = pbrkv+1
                 INC     SMATHI,X
                 BRA     EDELMK
 
-.L874B          EQUW    $B4FD
+.L874B          EQUW    $B4FD,$B35D,$B241,$B299
+                EQUW    $BADA,$BA3C,$BCF1,$BD27
+                EQUW    $A283,$B452,$9A2B,$86EB
+                EQUW    $B039,$B0A7,$B0B8,$B04A
+                EQUW    $8563,$96FD,$B321,$B1E4
+                EQUW    $9A72,$B3EA,$BD0A,$BD79
+                EQUW    $BD10,$B1ED,$9701,$B3B8
+                EQUW    $B126,$B0E8,$9965,$9906
+                EQUW    $8593,$8593,$8593,$8593
+                EQUW    $8593,$8593,$B1D8,$B1DE
+                EQUW    $854E,$8593,$8593,$86D8
+                EQUW    $B085,$B0A0,$B167,$B15D
 
-                EQUW    $B35D
+.L87AB          EQUW    $8D0D,$8DDF,$8EF7,$8F24
+                EQUW    $8F8F,$90A2,$91D6,$9262
+                EQUW    $931A,$93B4,$93B4,$93B4
+                EQUW    $93B4,$93B4,$93B4,$93B4
+                EQUW    $8D64,$8E6C,$8F0E,$8F52
+                EQUW    $904D,$915C,$9240,$92BE
+                EQUW    $936D,$940D,$9477,$94F9
 
-                EQUB    $41,$B2,$99,$B2,$DA,$BA,$3C,$BA
-                EQUB    $F1,$BC,$27,$BD,$83,$A2,$52,$B4
-                EQUB    $2B,$9A,$EB,$86,$39,$B0,$A7,$B0
-                EQUB    $B8,$B0,$4A,$B0,$63,$85,$FD,$96
-                EQUB    $21,$B3,$E4,$B1,$72,$9A,$EA,$B3
-                EQUB    $0A,$BD,$79,$BD,$10,$BD,$ED,$B1
-                EQUB    $01,$97,$B8,$B3,$26,$B1,$E8,$B0
-                EQUB    $65,$99,$06,$99,$93,$85,$93,$85
-                EQUB    $93,$85,$93,$85,$93,$85,$93,$85
-                EQUB    $D8,$B1,$DE,$B1,$4E,$85,$93,$85
-                EQUB    $93,$85,$D8,$86,$85,$B0,$A0,$B0
-                EQUB    $67,$B1,$5D,$B1
+                L87AC   = L87AB+1
+.BIGMESS        EQUW    $3220
 
-                EQUB    $0D
-
-.L87AC          EQUB    $8D,$DF,$8D,$F7,$8E,$24,$8F,$8F
-                EQUB    $8F,$A2,$90,$D6,$91,$62,$92,$1A
-                EQUB    $93,$B4,$93,$B4,$93,$B4,$93,$B4
-                EQUB    $93,$B4,$93,$B4,$93,$B4,$93,$64
-                EQUB    $8D,$6C,$8E,$0E,$8F,$52,$8F,$4D
-                EQUB    $90,$5C,$91,$40,$92,$BE,$92,$6D
-                EQUB    $93,$0D,$94,$77,$94,$F9
-
-                EQUB    $94
-
-.BIGMESS        JSR     VSTRING
+                EQUB    $85,$82
 
                 EQUS    "shf-f0"
 
@@ -1669,7 +1654,7 @@ L807A = pbrkv+1
 .L89E3          NOP
                 RTS
 
-.BIGMET         JSR     VSTRING
+.BIGMET         JSR     VSTRNG
 
                 EQUS    "The Acorn Screen Editor "
 
@@ -1725,7 +1710,7 @@ L807A = pbrkv+1
 .L8C18          NOP
                 RTS
 
-.csr0ST         LDX     #$11
+.L8C1A          LDX     #$11
                 STX     L007F
                 LDX     #$DC
                 LDY     #$07
@@ -1939,8 +1924,12 @@ L807A = pbrkv+1
                 CLC
                 CLC
                 CLC
-                ROR     PAGEWI
-                ORA     L638C
+.L8D0D          EQUS    "f0"
+
+                EQUB    $0D
+
+                EQUB    $8C
+
                 EQUS    "cursor can be moved"
 
                 EQUB    $92
@@ -2105,7 +2094,7 @@ L807A = pbrkv+1
 
                 EQUB    $EA
 
-                EQUS    "f5:- Global replace.              All, or"
+.L90A2          EQUS    "f5:- Global replace.              All, or"
 
                 EQUB    $89,$8E,$2E,$8A,$92
 
@@ -2440,25 +2429,25 @@ L807A = pbrkv+1
 
 .CUROFF         LDY     #$00
 .VDU231         LDX     #$01
-                LDA     #$17
-                JSR     L983C
+.VDU23          LDA     #$17
+                JSR     CSRXY0
 
                 LDX     #$08
                 LDA     #$00
-.L9627          JSR     OSWRCH
+.VDUnext        JSR     OSWRCH
 
                 DEX
-                BNE     L9627
+                BNE     VDUnext
 
 .VDU23X         RTS
 
 .intpag         LDA     options
                 AND     #$07
                 CMP     #$02
-                BEQ     L9663
+                BEQ     KEYONL
 
                 CMP     #$05
-                BEQ     L9663
+                BEQ     KEYONL
 
                 BRA     NOTTUT
 
@@ -2471,7 +2460,7 @@ L807A = pbrkv+1
                 BNE     NOTTUT
 
 .DOTUT          PHA
-                JSR     VSTRING
+                JSR     VSTRNG
 
                 EQUB    $1A
 
@@ -2481,19 +2470,19 @@ L807A = pbrkv+1
 
 .L964F          JSR     startI
 
-                JSR     csr0ST
+                JSR     L8C1A
 
                 JSR     BIGMESS
 
                 PLA
                 CMP     #$02
-                BEQ     KEYONL
+                BEQ     L9660
 
                 JSR     BIGMET
 
-.KEYONL         JSR     L8C77
+.L9660          JSR     L8C77
 
-.L9663          JSR     stopin
+.KEYONL         JSR     stopin
 
                 JSR     GETWIN
 
@@ -2539,10 +2528,11 @@ L807A = pbrkv+1
                 CMP     #$02
                 BNE     NOWIND
 
-.WINDOW         JSR     VSTRING
+.WINDOW         JSR     VSTRNG
 
-                TRB     LEA00
-                LDA     REALPA
+                EQUB    $1C,$00,$EA
+
+.L96AE          LDA     REALPA
                 INC     A
                 JSR     OSWRCH
 
@@ -2607,7 +2597,7 @@ L807A = pbrkv+1
                 BRA     L9703
 
                 LDA     #$08
-.L9703          JSR     L8565
+.L9703          JSR     pre-domode
 
 .CstatU         STZ     UPDATE
 .STATUS         JSR     CSR0STATUSY
@@ -2618,7 +2608,7 @@ L807A = pbrkv+1
 
                 BEQ     STATSO
 
-                JSR     VSTRING
+                JSR     VSTRNG
 
                 EQUS    "Insert "
 
@@ -2628,7 +2618,7 @@ L807A = pbrkv+1
 
 .L971E          BRA     STATSI
 
-.STATSO         JSR     VSTRING
+.STATSO         JSR     VSTRNG
 
                 EQUS    "Over   "
 
@@ -2638,7 +2628,7 @@ L807A = pbrkv+1
 STRMEX = STATSI+1
                 BEQ     STATSC
 
-                JSR     VSTRING
+                JSR     VSTRNG
 
                 EQUS    "     Cursor Editing"
 
@@ -2652,7 +2642,7 @@ STRMEX = STATSI+1
                 DEC     A
                 BNE     STATSM
 
-                JSR     VSTRING
+                JSR     VSTRNG
 
                 EQUS    "One mark "
 
@@ -2660,7 +2650,7 @@ STRMEX = STATSI+1
 
 .L975C          BRA     STATSS
 
-.STATSM         JSR     VSTRING
+.STATSM         JSR     VSTRNG
 
                 EQUS    "Two marks"
 
@@ -2672,7 +2662,7 @@ STRMEX = STATSI+1
                 AND     options
                 BNE     STATTW
 
-                JSR     VSTRING
+                JSR     VSTRNG
 
                 EQUS    "TAB cols "
 
@@ -2680,7 +2670,7 @@ STRMEX = STATSI+1
 
 .L9780          BRA     STATSS
 
-.STATTW         JSR     VSTRING
+.STATTW         JSR     VSTRNG
 
                 EQUS    "TAB words"
 
@@ -2692,7 +2682,7 @@ STRMEX = STATSI+1
 
                 BNE     STATMO
 
-                JSR     VSTRING
+                JSR     VSTRNG
 
                 EQUS    " Modified "
 
@@ -2700,13 +2690,13 @@ STRMEX = STATSI+1
 
 .L97A4          BRA     STATSX
 
-.STATMO         JSR     VSTRING
+.STATMO         JSR     VSTRNG
 
                 EQUS    " Discarded"
 
                 EQUB    $EA,$80,$0E
 
-.Original       JSR     VSTRING
+.Original       JSR     VSTRNG
 
                 EQUS    " Original "
 
@@ -2716,7 +2706,7 @@ STRMEX = STATSI+1
                 AND     #$40
                 BEQ     STATcr
 
-                JSR     VSTRING
+                JSR     VSTRNG
 
                 EQUS    " LF"
 
@@ -2724,7 +2714,7 @@ STRMEX = STATSI+1
 
 .L97D1          BRA     STATlf
 
-.STATcr         JSR     VSTRING
+.STATcr         JSR     VSTRNG
 
                 EQUS    " CR"
 
@@ -2787,7 +2777,7 @@ STRMEX = STATSI+1
                 INY
 .CSR0Y          LDX     #$00
 .CSRXY          LDA     #$1F
-.L983C          JSR     OSWRCH
+.CSRXY0         JSR     OSWRCH
 
                 TXA
 .OSWRCHPLUSY    JSR     OSWRCH
@@ -3227,7 +3217,7 @@ STRMEX = STATSI+1
 
                 JSR     CURON
 
-                JSR     VSTRING
+                JSR     VSTRNG
 
                 EQUB    $1A
 
@@ -3243,7 +3233,7 @@ STRMEX = STATSI+1
                 LDY     #$05
                 JMP     OSCLI
 
-                JSR     LA0FE
+.L9B23          JSR     LA0FE
 
 .L9B26          EQUB    $0E
 
@@ -3540,20 +3530,20 @@ STRMEX = STATSI+1
                 JMP     EDITco
 
 .LA0FE          PLA
-                STA     L007B
+                STA     ANOTHSTRING
                 PLA
-                STA     L007C
+                STA     ANOTHSTRING+1
                 JSR     LA10D
 
-                JMP     (L007B)
+                JMP     (ANOTHSTRING)
 
 .LA10A          JSR     LA11A
 
-.LA10D          INC     L007B
+.LA10D          INC     ANOTHSTRING
                 BNE     LA113
 
-                INC     L007C
-.LA113          LDA     (L007B)
+                INC     ANOTHSTRING+1
+.LA113          LDA     (ANOTHSTRING)
                 CMP     #$EA
                 BNE     LA10A
 
@@ -3593,7 +3583,7 @@ STRMEX = STATSI+1
                 PLY
                 RTS
 
-.LA145          JSR     L6974
+.LA145          EQUB    $20
 
                 EQUS    "title"
 
@@ -3693,17 +3683,60 @@ STRMEX = STATSI+1
 
                 EQUS    " the "
 
-                EQUB    $00,$48,$4A,$4A,$4A,$4A,$20,$4B
-                EQUB    $A2,$68,$29,$0F,$F8,$C9,$0A,$69
-                EQUB    $30,$D8,$4C,$EE,$FF,$20,$5D,$B1
-                EQUB    $20,$6C,$A9,$20,$75,$A9,$A9,$02
-                EQUB    $85,$24,$20,$73,$84,$B2,$0E,$C5
-                EQUB    $81,$D0,$02,$A9,$0D,$20,$E3,$FF
-                EQUB    $A9,$00,$20,$A9,$98,$90,$EB,$A9
-                EQUB    $03,$20,$EE,$FF,$4C,$87,$85,$4C
-                EQUB    $23,$9B,$20,$6D,$BC,$A2,$FF,$86
-                EQUB    $29,$86,$2A,$86,$45,$9A,$20,$FE
-                EQUB    $97
+                EQUB    $00
+
+.LA242          PHA
+                LSR     A
+                LSR     A
+                LSR     A
+                LSR     A
+                JSR     LA24B
+
+                PLA
+.LA24B          AND     #$0F
+                SED
+                CMP     #$0A
+                ADC     #$30
+                CLD
+                JMP     OSWRCH
+
+                JSR     STFILE
+
+                JSR     LA96C
+
+                JSR     rstPrtDes
+
+                LDA     #$02
+                STA     BRKACT
+.LA263          JSR     escTST
+
+                LDA     (TP)
+                CMP     termin
+                BNE     LA26E
+
+                LDA     #$0D
+.LA26E          JSR     OSASCI
+
+                LDA     #$00
+                JSR     TPPAP1
+
+                BCC     LA263
+
+                LDA     #$03
+                JSR     OSWRCH
+
+                JMP     EDITco
+
+                JMP     L9B23
+
+                JSR     MKREFUSE
+
+                LDX     #$FF
+                STX     PWTFLG
+                STX     PRTFLG
+                STX     LINEOT
+                TXS
+                JSR     prompt
 
                 EQUS    "Screen, Printer, As is, Help ?"
 
@@ -3715,69 +3748,30 @@ STRMEX = STATSI+1
                 EQUS    "Continuous, Paged ?"
 
                 EQUB    $EA,$20,$2F,$BA,$C9,$63,$F0,$06
-                EQUB    $C9,$70,$D0,$F5,$64,$29
+                EQUB    $C9,$70,$D0,$F5,$64,$29,$20,$EB
+                EQUB    $84,$A5,$22,$85,$08,$A5,$23,$85
+                EQUB    $09,$A9,$2E,$85,$46,$A2,$00
 
-.LA2EA          JSR     memsta
+                EQUB    $9E,$00,$05,$E8,$8A,$9D,$00,$06
+                EQUB    $D0,$F6,$A9,$20,$8D,$A0,$06,$A4
+                EQUB    $81,$C0,$0D,$D0,$05,$8D,$0A,$06
+                EQUB    $80,$03,$8D,$0D,$06,$A9,$09,$85
+                EQUB    $4F,$3A,$18
 
-                LDA     tstart
-                STA     ADDR
-                LDA     tstart+1
-                STA     ADDR+1
-                LDA     #$2E
-                STA     CTLCHA
-                LDX     #$00
-.CLRREG         STZ     LINBUFF,X
-                INX
-                TXA
-                STA     stracc,X
-                BNE     CLRREG
+                EQUB    $9D,$1C,$05,$E8,$69,$08,$C9,$64
+                EQUB    $90,$F6,$A9,$02,$85,$24,$3A,$8D
+                EQUB    $00,$05,$85,$1F,$8D,$02,$05,$64
+                EQUB    $4C,$64,$4E,$64,$1D,$64,$4A,$64
+                EQUB    $1B,$64,$3B,$64,$49,$64,$19,$A9
+                EQUB    $3A,$85,$44,$A9,$4C,$85,$1A,$20
+                EQUB    $32,$85
 
-                LDA     #$20
-                STA     L06A0
-                LDY     termin
-                CPY     #$0D
-                BNE     LA315
+                EQUB    $1A,$0C,$EA
 
-                STA     L060A
-                BRA     LA318
-
-.LA315          STA     L060D
-.LA318          LDA     #$09
-                STA     mark_count
-                DEC     A
-                CLC
-.DEFTAB         STA     TABLST,X
-                INX
-                ADC     #$08
-                CMP     #$64
-                BCC     DEFTAB
-
-                LDA     #$02
-                STA     BRKACT
-                DEC     A
-                STA     LINBUFF
-                STA     UMATHI+1
-                STA     LINENO
-                STZ     LINE
-                STZ     INDEXH
-                STZ     UMATLO+1
-                STZ     PBOLD
-                STZ     SMATHI+1
-                STZ     FILL
-                STZ     OFFSET
-                STZ     SMATLO+1
-                LDA     #$3A
-                STA     LINEDW
-                LDA     #$4C
-                STA     SMATHI
-                JSR     VSTRING
-
-                INC     A
-                TSB     L24EA
-                ROL     A
+.LA353          BIT     PRTFLG
                 BMI     PATCHA
 
-                JSR     LA975
+                JSR     rstPrtDes
 
 .PATCHA         BIT     PWTFLG
                 BMI     CHAINB
@@ -3834,7 +3828,7 @@ STRMEX = STATSI+1
 
                 EQUB    $EA,$20,$05,$AC
 
-.DODWM          JSR     VSTRING
+.DODWM          JSR     VSTRNG
 
                 NOP
                 JSR     closeX
@@ -4833,7 +4827,7 @@ LA5EA = LA5E9+1
                 STA     TP+1
                 RTS
 
-.LA975          LDA     #$05
+.rstPrtDes      LDA     #$05
                 LDX     #$00
                 JSR     OSBYTE
 
@@ -4938,7 +4932,7 @@ LA5EA = LA5E9+1
                 JMP     OSWORD
 
 .DOVDU          BIT     UMATHI
-                BPL     LAA33
+                BPL     VDUNBL
 
                 PHY
                 PHX
@@ -4957,7 +4951,7 @@ LA5EA = LA5E9+1
 
                 BRA     VDUUND
 
-.LAA33          BIT     UMATLO
+.VDUNBL         BIT     UMATLO
                 BPL     WRCHA
 
                 PHY
@@ -4971,35 +4965,24 @@ LA5EA = LA5E9+1
                 ROL     A
                 EOR     #$FF
                 TSB     scratc+8
-.VDUDON         JSR     VSTRING
+.VDUDON         JSR     VSTRNG
 
-                JSR     LA2EA
+                EQUB    $17,$20,$EA
 
-.LAA4E          ORA     (L00B5,X)
-LAA4F = LAA4E+1
-                ADC     (HIMEM,X)
-                INC     LE8FF
+.LAA4D          LDX     #$01
+.VDUPRG         LDA     scratc,X
+                JSR     OSWRCH
+
+                INX
                 CPX     #$09
-                BNE     LAA4F
+                BNE     VDUPRG
 
-                JSR     VSTRING
+                JSR     VSTRNG
 
-                JSR     L2017
+                EQUB    $20,$17,$20,$00,$00,$00,$00,$00
+                EQUB    $00,$00,$00,$EA
 
-                BRK
-                EQUB    $00
-
-                BRK
-                EQUB    $00
-
-                BRK
-                EQUB    $00
-
-                BRK
-                EQUB    $00
-
-                NOP
-                PLX
+.VDUPRG1        PLX
                 PLY
                 RTS
 
@@ -5007,7 +4990,7 @@ LAA4F = LAA4E+1
 
                 JMP     DODWM
 
-.FMWRCH         BIT     L00FF
+.FMWRCH         BIT     ESCFLG
                 BMI     ESCAP
 
                 BIT     LINE
@@ -5250,13 +5233,13 @@ LAA4F = LAA4E+1
 .SCREEG         JMP     FMWRCH
 
 .closeX         LDY     INDEXH
-                BEQ     LABE5
+                BEQ     closexrts
 
                 STZ     INDEXH
                 LDA     #$00
                 JSR     OSFIND
 
-.LABE5          RTS
+.closexrts      RTS
 
 .SCMVTO         ASL     A
 .MOVE           LSR     A
@@ -5349,10 +5332,10 @@ LAA4F = LAA4E+1
                 STA     scratc+$0A,X
                 SEC
 .NUMLP          LDA     TEMP
-                SBC     TOPTBL,X
+                SBC     LBBF7,X
                 TAY
                 LDA     TEMP+1
-                SBC     WOPTBL,X
+                SBC     LBBFC,X
                 BCC     OUTNUM
 
                 STY     TEMP
@@ -5743,7 +5726,7 @@ LAA4F = LAA4E+1
                 LDA     PAGELE
                 BRA     SCHUDC
 
-.SCUDHD         JSR     VSTRING
+.SCUDHD         JSR     VSTRNG
 
                 EQUB    $1E,$0B
 
@@ -5794,7 +5777,7 @@ LAA4F = LAA4E+1
                 TYA
                 JSR     OSWRCH
 
-                JSR     VSTRING
+                JSR     VSTRNG
 
                 PHP
                 ORA     TEMP
@@ -6030,7 +6013,7 @@ LAA4F = LAA4E+1
                 LDA     #$07
                 JMP     OSWRCH
 
-.startI         JSR     VSTRING
+.startI         JSR     VSTRNG
 
                 EQUB    $11
 
@@ -6541,7 +6524,7 @@ LAA4F = LAA4E+1
                 LDX     #$00
                 JSR     OSBYTEwithY
 
-                JSR     VSTRING
+                JSR     VSTRNG
 
                 EQUB    $85
 
@@ -6787,7 +6770,7 @@ LAA4F = LAA4E+1
 
 .LB533          JSR     WRITELINE
 
-                JSR     VSTRING
+                JSR     VSTRNG
 
                 EQUS    ", new line:"
 
@@ -7531,8 +7514,7 @@ LAA4F = LAA4E+1
                 STA     TEMP
                 LDA     LASTSP
 .CHNRTM         STA     TEMP+1
-.LB9E9          LDY     FIELDOFFTAB,X
-LB9EA = LB9E9+1
+                LDY     FIELDOFFTAB,X
                 LDA     (TEMP),Y
 .CHNRSI         STA     (GS)
                 INC     GS
@@ -7816,10 +7798,10 @@ LB9EA = LB9E9+1
 .WOPRNEXT       STZ     STRING+1
 .WOPRLOOP       SEC
                 LDA     LINE
-                SBC     TOPTBL,X
+                SBC     LBBF7,X
                 TAY
                 LDA     LINE+1
-                SBC     WOPTBL,X
+                SBC     LBBFC,X
                 BCC     WOPRDIGI
 
                 STY     LINE
@@ -7842,13 +7824,9 @@ LB9EA = LB9E9+1
 
                 RTS
 
-.TOPTBL         ORA     (ARGP,X)
-                STZ     L00E8
-.LBBFB          BPL     LBBFD
+.LBBF7          EQUB    $01,$0A,$64,$E8,$10
 
-WOPTBL = LBBFB+1
-.LBBFD          BRK
-                EQUB    $00
+.LBBFC          EQUB    $00,$00,$00,$03,$27
 
 .MARKUPDATE     JSR     MKUDCH
 
@@ -7972,7 +7950,7 @@ WOPTBL = LBBFB+1
                 LDY     TMAX+1
 .DBLKEP         STX     ENDP
                 STY     ENDP+1
-.LBCC0          RTS
+.DBLKEPX        RTS
 
 .MVBLOK         JSR     CLRMAK
 
@@ -7994,7 +7972,7 @@ WOPTBL = LBBFB+1
                 INC     MARKSB
 .MVBLOJ         LDA     MARKSB
                 DEC     A
-                BNE     LBCC0
+                BNE     DBLKEPX
 
 .BADMARK        BRK
                 EQUB    $01
@@ -8003,7 +7981,7 @@ WOPTBL = LBBFB+1
 
                 EQUB    $00
 
-.LBCF1          JSR     FINEPO
+.SETMARK        JSR     FINEPO
 
                 LDX     MARKX
                 CPX     #$02
@@ -8038,7 +8016,7 @@ WOPTBL = LBBFB+1
                 STA     SCRNX
                 RTS
 
-                JSR     MVBLOK
+.MKCPY          JSR     MVBLOK
 
                 SEC
                 LDA     UMATLO+1
