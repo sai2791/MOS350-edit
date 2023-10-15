@@ -12,9 +12,9 @@ entry $8079
 entry $83D7
 entry $83E9
 entry $B76C
-entry $B813
+; entry $B813
 entry $B56A
-entry $8079
+;pbrkv  entry $8079
 entry $BCF1
 entry $8023
 entry $8117
@@ -28,7 +28,7 @@ entry $837B
 entry $89E3
 entry $8C18
 entry $AE95 
-entry $B037
+entry $B038
 entry $B218
 entry $B262
 entry $B28E
@@ -47,7 +47,6 @@ entry $BAC4
 entry $BADA
 entry $BAEF
 entry $B241 ; LOADfi
-entry $964F 
 entry $975C
 entry $976B
 entry $97A4
@@ -73,9 +72,12 @@ entry $B397
 entry $B3B8
 entry $B4FD
 entry $87E3 ; BIGMESS
+entry $A2DD
 
-word $874B 48 
-word $87AB 29 
+entry $A2B1
+wordentry $874B 48
+wordentry $87AB 29 
+
 
 ; startCB
 word $b397 ; starCB
@@ -88,21 +90,38 @@ byte $B3AB
 byte $B3AC
 byte $B3AD
 
-byte $AE93
-byte $AE94
+byte $AE93 3
+entry $AE96
+
+byte $AEDC
+entry $AEE7
+
+
 byte $B033
 byte $B034
 byte $B035
 byte $B036
 byte $B261
 
-byte $964C
-byte $964D
 byte $964E
 byte $9B26
 
 byte $9B0F
-byte $AE93 3
+
+byte $845B 4 ; in escSET
+entry $845F
+
+byte $80C0 3 ; in norBRK
+entry $80C3
+
+byte $80CC 5
+entry $80D1
+
+byte $8117 5
+entry $811C
+
+byte $964B 4 ; (Seems to be an extra byte)
+entry $964F
 
 ; NUMERL
 byte $AD1F 13
@@ -466,7 +485,6 @@ string $BEC0 3 ; ".fo"
 string $BEC4 3 ; ".ce"
 string $BEC8 8 ; "Page .r0"
 string $BED1 6 ; ".ff.en"
-string $9716 7 ; "Insert "
 string $BAB5 1;
 string $AD39 26; CHARS
 
@@ -565,3 +583,8 @@ entry $961E
 ;;
 byte $96AB 3
 entry $96AE
+
+byte $9B04
+
+byte $A3CC 3
+entry $A3CF
