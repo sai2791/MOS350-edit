@@ -5,165 +5,41 @@ symbols edit150.sym
 save edit150.asm
 hexdump edit150.hex
 
-entry $8000
-entry $B334
-entry $8003
-entry $8079
-entry $83D7
-entry $83E9
-entry $B76C
-; entry $B813
-entry $B56A
+
 ;pbrkv  entry $8079
-entry $BCF1
-entry $8023
-entry $8117
-entry $80EE
-entry $9A89
-entry $971E
-entry $9746
-entry $BE78
-entry $BE88
-entry $837B
-entry $89E3
-entry $8C18
-entry $AE95 
-entry $B038
-entry $B218
-entry $B262
-entry $B28E
-entry $B2AC
-entry $B2E1
-entry $B321
-entry $B3AF
-entry $B3EA
-entry $B3f7
-entry $B533
-entry $B545
-entry $B5C9
-entry $BA52
-entry $BAB7
-entry $BAC4
-entry $BADA
-entry $BAEF
-entry $B241 ; LOADfi
-entry $975C
-entry $976B
-entry $97A4
-entry $9780
-entry $97D1
-entry $97FC
-entry $9B12
-entry $9B26 
-entry $A0F8 
-entry $A604
-entry $B0E8
-entry $B126
-entry $B151
-entry $B167
-entry $B19F
-entry $B1E4
-entry $B1DE
-entry $B1D8
-entry $B1ED
-entry $B299
-entry $B35D
-entry $B397
-entry $B3B8
-entry $B4FD
-entry $87E3 ; BIGMESS
-entry $A2DD
-
-entry $A2B1
-wordentry $874B 48
-wordentry $87AB 29 
-
-
-; startCB
-word $b397 ; starCB
-byte $b399 2
-byte $A145
-byte $B3AA
-byte $B3A9
-byte $B3A8
-byte $B3AB
-byte $B3AC
-byte $B3AD
-
-byte $AE93 3
-entry $AE96
-
-byte $AEDC
-entry $AEE7
-
-
-byte $B033
-byte $B034
-byte $B035
-byte $B036
-byte $B261
-
-byte $964E
-byte $9B26
-
-byte $9B0F
-
-byte $845B 4 ; in escSET
-entry $845F
-
-byte $80C0 3 ; in norBRK
-entry $80C3
-
-byte $80CC 5
-entry $80D1
-
-byte $8117 5
-entry $811C
-
-byte $964B 4 ; (Seems to be an extra byte)
-entry $964F
-
-; NUMERL
-byte $AD1F 13
-byte $AD2C 13
-byte $85C6 6
-
-byte $A350 3
-entry $A353
-
-byte $AA4A 3 ; VDUDON
-entry $AA4D
-
-byte $AA5C 12
-entry $AA68
-
-byte $BBF7 5
-byte $BBFC 5
-
-entry $BD07 ; CLEARMARKS
-entry $BD0D ; MKDEL
-entry $BD27 ; MKCPY
-entry $BD79 ; MKMVE
-
-entry $854E ; CRTOGG
-
-entry $85CD
-
-entry $8663
-entry $86D8
-entry $AE96
-
-entry $A242
-
+entry $8000
+entry $8003
 string $8009 4 ; "EDIT"
 string $800E 5 ; "1.50r"
 string $8014 13 ; "(C)1989 Acorn"
+entry $8023
+entry $8079
+byte $80C0 3 ; in norBRK
+entry $80C3
+byte $80CC 5
+entry $80D1
 string $80D8 19 ; "Shift f5 D for info"
+entry $80EE
 string $80FF 24 ; "Press ESCAPE to continue"
+byte $8117 5
+entry $811C
 string $832C 13 ; "No name found"
 string $8372 8 ; "Loading "
+entry $837B
 string $83CB 12 ; "File too big"
+entry $83D7
 string $83DF 10 ; "Saving to "
+entry $83E9
+byte $845B 4 ; in escSET
+entry $845F
+entry $854E ; CRTOGG
+byte $85C6 6
+entry $85CD
+entry $8663
+entry $86D8
+wordentry $874B 48
+wordentry $87AB 29 
+entry $87E3 ; BIGMESS
 String $87E7 6 ; "shf-f0"
 string $87EF 6 ; "shf-f1"
 string $87F7 6 ; "shf-f2"
@@ -214,6 +90,7 @@ string $89A7 7 ; " Place "
 string $89AF 7 ; "Copy   "
 string $89B7 7 ; " Text  "
 string $89BF 6 ; " Text "
+entry $89E3
 string $89E8 24 ; "The Acorn Screen Editor "
 string $8A01 31 ; " 1989 Acorn Computers Vn 1.50r "
 string $8A25 16 ; "Shift: screen up"
@@ -224,11 +101,17 @@ string $8B17 71 ; "Control:         Shift COPY provides normal soft keys and cur
 string $8B67 73 ; "    l/r of line         copying (ESCAPE to leave this mode).             "
 string $8BB5 75 ; "Shift: screen down Control COPY deletes the current line (to next RETURN)  "
 string $8C05 19 ; "Control: text end  "
+entry $8C18
+byte $8C7D 54
+entry $8D0D ; f0
+string $8D0D 2
+byte $8D0F
 string $8D11 19 ; "cursor can be moved"
 string $8D25 11 ; "a new line."
 string $8D31 28 ; "For this operation lines are"
 string $8D4E 9 ; "sequences"
 string $8D58 9 ; "ended by "
+string $8D64 2
 string $8D68 39 ; "ends of lines can be shown as a special"
 string $8D90 43 ; "character so that they can be seen clearly."
 string $8DBC 31 ; "This alters with each press of "
@@ -326,21 +209,40 @@ string $94F9 8 ; "shf-COPY"
 string $9502 19 ; "Cursor editing with"
 string $9516 77 ; "cursor keys & COPY is enabled.User defined soft keys are available as normal."
 string $9564 42 ; "All characters except ESCAPE are put into "
+entry $961E
+byte $964C 3 ; (Seems to be an extra byte)
+entry $964F
+byte $96AB 3
+entry $96AE
 string $9716 7 ; "Insert "
+entry $971E
 string $9723 7 ; "Over   "
 string $9732 19 ; "     Cursor Editing"
+entry $9746
 string $9752 9 ; "One mark "
+entry $975C
 string $9761 9 ; "Two marks"
+entry $976B
 string $9776 9 ; "TAB cols "
+entry $9780
 string $9785 9 ; "TAB words"
 string $9799 10 ; " Modified "
+entry $97A4
 string $97A9 10 ; " Discarded"
 string $97B9 10 ; " Original "
 string $97CD 3 ; " LF"
+entry $97D1
 string $97D6 3 ; " CR"
 string $97ED 14 ; "Type filename "
+entry $97FC
 string $9A75 19 ; "Type language name:"
+entry $9A89
 string $9AB5 38 ; "Not enough space to return to language"
+byte $9B04
+byte $9B0F
+entry $9B12
+byte $9B26
+entry $9B26 
 string $9B29 34 ; "Format commands:- {initial values}"
 string $9B4D 38 ; "afrn assign format n to register r {0}"
 string $9B74 36 ; "anrn assign number to register r {0}"
@@ -412,6 +314,8 @@ string $A09A 13 ; "end underline"
 string $A0AB 12 ; "counted as 1"
 string $A0BC 21 ; "without being counted"
 string $A0D2 34 ; "r0-9 contents of register e.g. .r0"
+entry $A0F8 
+byte $A145
 string $A146 5 ; "title"
 string $A14C 3 ; ".en"
 string $A155 17 ; " n output CHR$(n)"
@@ -437,58 +341,25 @@ string $A219 16 ; " scroll margins "
 string $A22B 11 ; "with ctrl-f"
 string $A237 4 ; " to "
 string $A23C 5 ; " the "
+entry $A242
 string $A292 30 ; "Screen, Printer, As is, Help ?"
+entry $A2B1
 string $A2C9 19 ; "Continuous, Paged ?"
+entry $A2DD
+byte $A350 3
+entry $A353
 string $A3B9 12 ; "Print done. "
+byte $A3CC 3
+entry $A3CF
+entry $A604
+byte $AA4A 3 ; VDUDON
+entry $AA4D
+byte $AA5C 12
+entry $AA68
 string $AC08 23 ; "Press SHIFT to continue"
-string $B1F0 40 ; "Clear text [Y,shf-f9 (exec),D (discard)]"
-string $B24A 22 ; "Overwrite text [Y,f2]:"
-string $B277 22 ; "Type filename to load:"
-string $B2A3 8 ; "to save:"
-string $B2C7 24 ; "for MARK TO CURSOR save:"
-string $B30A 22 ; "Bad use of stored name"
-string $B32A 10 ; "to insert:"
-string $B367 12 ; "Command line"
-string $B3C4 23 ; "Only 0,1,3,4,6,7,D or K"
-string $B3ED 9 ; "New Mode:"
-string $B4A3 7 ; "No room"
-string $B4AC 17 ; "No old text found"
-string $B52A 8 ; "At line "
-string $B539 11 ; ", new line:"
-string $B54F 10 ; "Bad number"
-string $B55B 14 ; "Line not found"
-string $B671 23 ; "Too many find multiples"
-string $B6D4 24 ; "Bad replace field number"
-string $B722 16 ; "Syntax incorrect"
-string $B745 12 ; "Error with ~"
-string $B75F 12 ; "Error with \"
-string $B804 12 ; "Error with |"
-string $B9FA 7 ; "No room"
-string $BA42 15 ; "Global replace:"
-string $BABD 6 ; " found"
-string $BAC7 18 ; "No previous string"
-string $BADD 17 ; "Find and replace:"
-string $BBB9 10 ; " Not found"
-string $BC73 11 ; "Mark(s) set"
-string $BCE5 11 ; "Bad marking"
-string $BE41 54 ; "C(ontinue), E(nd of file replace), R(eplace) or ESCAPE"
-string $BE7C 11 ; "Replace by:"
-string $BE98 3 ; ".he"
-string $BE9C 3 ; ".en"
-string $BEA0 3 ; ".fo"
-string $BEA4 3 ; ".ce"
-string $BEA8 8 ; "Page .r0"
-string $BEB1 6 ; ".ff.en"
-string $BEB8 3 ; ".he"
-string $BEBC 3 ; ".en"
-string $BEC0 3 ; ".fo"
-string $BEC4 3 ; ".ce"
-string $BEC8 8 ; "Page .r0"
-string $BED1 6 ; ".ff.en"
-string $BAB5 1;
+byte $AD1F 13
+byte $AD2C 13
 string $AD39 26; CHARS
-
-;CMDS
 string $AD53 2
 word $AD55
 string $AD57 2
@@ -575,16 +446,114 @@ string $ADF7 2
 word $ADF9 
 string $ADFB 2
 word $ADFD
-;;
-string $8D0D 2
-byte $8D0F
-;;
-entry $961E
-;;
-byte $96AB 3
-entry $96AE
-
-byte $9B04
-
-byte $A3CC 3
-entry $A3CF
+byte $AE93 3
+entry $AE95 
+entry $AE96
+byte $AEDC
+entry $AEE7
+byte $B033
+byte $B034
+byte $B035
+byte $B036
+entry $B038
+entry $B0E8
+entry $B126
+entry $B151
+entry $B167
+entry $B19F
+entry $B1D8
+entry $B1DE
+entry $B1E4
+entry $B1ED
+string $B1F0 40 ; "Clear text [Y,shf-f9 (exec),D (discard)]"
+entry $B218
+entry $B241 ; LOADfi
+string $B24A 22 ; "Overwrite text [Y,f2]:"
+byte $B261
+entry $B262
+string $B277 22 ; "Type filename to load:"
+entry $B28E
+entry $B299
+string $B2A3 8 ; "to save:"
+entry $B2AC
+string $B2C7 24 ; "for MARK TO CURSOR save:"
+entry $B2E1
+string $B30A 22 ; "Bad use of stored name"
+entry $B321
+string $B32A 10 ; "to insert:"
+entry $B334
+entry $B35D
+string $B367 12 ; "Command line"
+entry $B397
+byte $B3A8
+byte $B3A9
+byte $B3AA
+byte $B3AB
+byte $B3AC
+byte $B3AD
+entry $B3AF
+entry $B3B8
+string $B3C4 23 ; "Only 0,1,3,4,6,7,D or K"
+entry $B3EA
+string $B3ED 9 ; "New Mode:"
+entry $B3f7
+string $B4A3 7 ; "No room"
+string $B4AC 17 ; "No old text found"
+entry $B4FD
+string $B52A 8 ; "At line "
+entry $B533
+string $B539 11 ; ", new line:"
+entry $B545
+string $B54F 10 ; "Bad number"
+string $B55B 14 ; "Line not found"
+entry $B56A
+entry $B5C9
+string $B671 23 ; "Too many find multiples"
+string $B6D4 24 ; "Bad replace field number"
+string $B722 16 ; "Syntax incorrect"
+string $B745 12 ; "Error with ~"
+string $B75F 12 ; "Error with \"
+entry $B76C
+string $B804 12 ; "Error with |"
+string $B9FA 7 ; "No room"
+string $BA42 15 ; "Global replace:"
+entry $BA52
+string $BAB5 1;
+entry $BAB7
+string $BABD 6 ; " found"
+entry $BAC4
+string $BAC7 18 ; "No previous string"
+entry $BADA
+string $BADD 17 ; "Find and replace:"
+entry $BAEF
+string $BBB9 10 ; " Not found"
+byte $BBF7 5
+byte $BBFC 5
+string $BC73 11 ; "Mark(s) set"
+string $BCE5 11 ; "Bad marking"
+entry $BCF1
+entry $BD07 ; CLEARMARKS
+entry $BD0D ; MKDEL
+entry $BD27 ; MKCPY
+entry $BD79 ; MKMVE
+string $BE41 54 ; "C(ontinue), E(nd of file replace), R(eplace) or ESCAPE"
+entry $BE78
+string $BE7C 11 ; "Replace by:"
+entry $BE88
+string $BE98 3 ; ".he"
+string $BE9C 3 ; ".en"
+string $BEA0 3 ; ".fo"
+string $BEA4 3 ; ".ce"
+string $BEA8 8 ; "Page .r0"
+string $BEB1 6 ; ".ff.en"
+string $BEB8 3 ; ".he"
+string $BEBC 3 ; ".en"
+string $BEC0 3 ; ".fo"
+string $BEC4 3 ; ".ce"
+string $BEC8 8 ; "Page .r0"
+string $BED1 6 ; ".ff.en"
+word $b397 ; starCB
+byte $b399 2
+; NUMERL
+; entry $B813
+; startCB

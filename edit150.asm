@@ -1,44 +1,112 @@
+;
+;  This is a disassembly of the edit 1.50r rom from the BBC Master
+;  MOS 3.50.  The label names are copied from an earlier disassembly
+;  or source 
+;  
+;  This is for CMOS machines only, it contains 65C02 instructions
+;
+;
+; The editor keeps a byte in the CMOS RAM.
+; It is copied into TUTMOD on startup.
+; TODO: Check that we are using TUTMOD not options 
+;
+; Bits 0 to 2 define the current mode with the following relationship
+;       Value   Mode
+;        0   -   0 ( 80x31 )
+;        1   -   1 ( 40x31 )
+;        2   -   K ( 80x24 ) Function key display (Mode 0)
+;        3   -   3 ( 80x24 )
+;        4   -   4 ( 40x31 )
+;        5   -   D ( 80x17 ) Full HELP display    (Mode 0)
+;        6   -   6 ( 40x24 )
+;        7   -   7 ( 40x24 )
+;
+; Bit 3 - indicates TABKEY mode
+; Bit 4 - indicates Insert/Overtype
+; Bit 5 - indicates display CR
+; Bit 6 - has been given to the network
+; Bit 7 - obey format controls
+;
+; one should be taken over for LF/CR as newline maybe
+
+; Some Constants
+
+null    =       &00
+lf      =       &0A
+cr      =       &0D
+tab     =       &09
+down    =       lf
+up      =       &0B
+home    =       &1E
+space   =       " "
+delete  =       &7F
+
+IF lfver=0
+  termin = cr   ; line terminator
+ELSE
+  termin = lf   ; a different line terminator
+ENDIF
+
+
+bit7    =       &80
+bit6    =       &40
+bit5    =       &20
+bit4    =       &10
+bit3    =       &08
+bit2    =       &04
+bit1    =       &02
+bit0    =       &01
+
+blink   =       bit6
+fblink  =       bit5
+
+fcstrt  =       &00             ; Full cursor start line
+ncstrt  =       &07             ; Normal start line
+;
+
 STRING          = $0000
-STRING+1        = $0001
+STRINGd        = $0001
 OSHWM           = $0002
-PAJE+1          = $0003
+PAJEd          = $0003
 TMAX            = $0004
-TMAX+1          = $0005
+TMAXd          = $0005
+FULLSC         = $0005
 TEMP            = $0006
-TEMP+1          = $0007
+thelot          = $0006
+TEMPd          = $0007
 ADDR            = $0008
-ADDR+1          = $0009
+ADDRd          = $0009
 ARGP            = $000A
-ARGP+1          = $000B
+ARGPd          = $000B
 VARP            = $000C
-VARP+1          = $000D
+VARPd          = $000D
 TP              = $000E
-TP+1            = $000F
+TPd            = $000F
 GS              = $0010
-GS+1            = $0011
+GSd            = $0011
 GE              = $0012
-GE+1            = $0013
+GEd            = $0013
 XEFF            = $0014
 LASTSP          = $0015
 DIFF            = $0016
 CENTRE          = $0017
 SMATLO          = $0018
-SMATLO+1        = $0019
+SMATLOd        = $0019
 SMATHI          = $001A
-SMATHI+1        = $001B
+SMATHId        = $001B
 UMATLO          = $001C
-UMATLO+1        = $001D
+UMATLOd        = $001D
 UMATHI          = $001E
-UMATHI+1        = $001F
-HIMEM           = $0020
-HYMEM+1         = $0021
+UMATHId        = $001F
+HYMEM           = $0020
+HYMEMd         = $0021
 tstart          = $0022
-tstart+1        = $0023
+tstartd        = $0023
 BRKACT          = $0024
 SIZE            = $0025
-SIZE+1          = $0026
+SIZEd          = $0026
 maxsiz          = $0027
-maxsiz+1        = $0028
+maxsizd        = $0028
 PWTFLG          = $0029
 PRTFLG          = $002A
 options         = $002B
@@ -75,7 +143,7 @@ OFFSET          = $0049
 PBOLD           = $004A
 LASTTAB         = $004B
 LINE            = $004C
-LINE+1          = $004D
+LINEd          = $004D
 INDEXH          = $004E
 mark_count      = $004F
 MARKX           = $0050
@@ -87,31 +155,15 @@ BUTTFLAG        = $0055
 METAFLAG        = $0056
 REPLFLAG        = $0057
 ENDP            = $005B
-ENDP+1          = $005C
+ENDPd          = $005C
 SCP             = $005D
-SCP+1           = $005E
+SCPd           = $005E
 TEXTP           = $005F
-TEXTP+1         = $0060
+TEXTPd         = $0060
 scratc          = $0061
-scratc+1        = $0062
-scratc+2        = $0063
-scratc+3        = $0064
-scratc+4        = $0065
-scratc+5        = $0066
-scratc+6        = $0067
-scratc+7        = $0068
-scratc+8        = $0069
-scratc+9        = $006A
-scratc+$0A      = $006B
-scratc+$0B      = $006C
-scratc+$0C      = $006D
-scratc+$0D      = $006E
-scratc+$0E      = $006F
-scratc+$0F      = $0070
-BUFF+6          = $0071
-BUFF+7          = $0072
+scratcd        = $0062
 ANOTHSTRING     = $007B
-ANOTHSTRING+1   = $007C
+ANOTHSTRINGd   = $007C
 L007D           = $007D
 L007E           = $007E
 L007F           = $007F
@@ -120,7 +172,6 @@ termin          = $0081
 L0083           = $0083
 L0084           = $0084
 L008D           = $008D
-L009D           = $009D
 L00F2           = $00F2
 L00F4           = $00F4
 L00FD           = $00FD
@@ -129,7 +180,7 @@ L019F           = $019F
 L01A0           = $01A0
 USERV           = $0200
 BRKV            = $0202
-BRKV+1          = $0203
+BRKVd          = $0203
 IRQ1V           = $0204
 IRQ2V           = $0206
 CLIV            = $0208
@@ -159,30 +210,28 @@ FRBUFF          = $0400
 GRBUFF          = $0464
 nambuf          = $04C8
 oldsta          = $04FC
-oldsta+1        = $04FD
-oldsta+2        = $04FE
-oldsta+3        = $04FF
+oldstad        = $04FD
 LINBUFF         = $0500
-LINBUFF+1       = $0501
+noregs          = $0500
+LINBUFFd       = $0501
 LINENO          = $0502
-LINENO+1        = $0503
+LINENOd        = $0503
 PAGEEH          = $0514
-PAGEEH+1        = $0515
+PAGEEHd        = $0515
 PAGEOH          = $0516
-PAGEOH+1        = $0517
+PAGEOHd        = $0517
 PAGEEF          = $0518
-PAGEEF+1        = $0519
+PAGEEFd        = $0519
 PAGEOF          = $051A
-PAGEOF+1        = $051B
+PAGEOFd        = $051B
 TABLST          = $051C
-TABLST+1        = $051D
+TABLSTd        = $051D
 L052F           = $052F
 MACLST          = $0530
-MACLST+1        = $0531
-STRACC-2        = $05FE
-STRACC-1        = $05FF
+MACLSTd        = $0531
 stracc          = $0600
-STRACC+1        = $0601
+STRACCd        = $0601
+trnlst          = &0600
 L060A           = $060A
 L060D           = $060D
 L06A0           = $06A0
@@ -194,20 +243,15 @@ SCNTHISTK       = $0718
 FIELDMMXTAB     = $071E
 FIELDOFFTAB     = $0728
 SCRIM           = $0732
-SCRIM+1         = $0733
+SCRIMd         = $0733
 machtype        = $0752
 L0753           = $0753
 PRMPTL          = $07E5
-L1818           = $1818
-L183C           = $183C
-L187E           = $187E
-L1CFE           = $1CFE
 L6120           = $6120
 L6373           = $6373
 L638C           = $638C
 L6854           = $6854
 L6C41           = $6C41
-L6E65           = $6E65
 L6F43           = $6F43
 L6F8C           = $6F8C
 L748C           = $748C
@@ -237,7 +281,9 @@ OSWORD          = $FFF1
 OSBYTE          = $FFF4
 OSCLI           = $FFF7
 
+CPU 1
                 org     $8000
+.BeebDisStartAddr
 .langent        JMP     language
 
 .servent        JMP     service
@@ -263,6 +309,8 @@ OSCLI           = $FFF7
                 BRA     L7FA9
 
                 LDA     L0083,X
+;
+; Recofnise *help and *edit 
 .service        PHA
                 TAX
                 TYA
@@ -273,13 +321,17 @@ OSCLI           = $FFF7
                 CPX     #$09
                 BNE     ucomEX
 
+                ; *Help response
+
                 LDA     (L00F2),Y
                 CMP     #$0D
-                BNE     ucomEX
+                BNE     ucomEX  ; don't say anything unless there are no keywords 
 
                 JSR     OSNEWL
 
                 LDX     #$F6
+; Print the ROM name from Header, when we get the brk, print space and 
+; continue
 .prnthelp       LDA     L7F13,X
                 BNE     notaspace
 
@@ -299,27 +351,34 @@ OSCLI           = $FFF7
 
 .command        LDX     #$FC
 .ucomLO         LDA     (L00F2),Y
-                CMP     #$2E
+                CMP     #$2E       ; is this a "."
                 BEQ     ucommi
 
-                AND     #$DF
-                CMP     L7F0D,X
-                BNE     ucomEX
+                AND     #$DF       ; Change to Uppercase
+                CMP     L7F0D,X    ; pointer to EDIT (L8009)
+                BNE     ucomEX     
 
                 INY
                 INX
                 BNE     ucomLO
 
                 LDA     (L00F2),Y
-                CMP     #$21
+                CMP     #$21       ; is this a "!"
                 BCS     ucomEX
 
 .ucommi         LDX     L00F4
-                LDA     #$8E
+                LDA     #$8E       ; Enter Languge Rom
                 JMP     OSBYTE
+;
+;Outputs 'brk' error message, & jumps to relevant re-entry
+;point. Detailed action depends on value of 'brkaction' on entry -
+; brkaction = 0 Moves cursor to editor status position,
+; outputs error message, then prompts for space
+; before jumping to editcont.
+; 1    Outputs error message, and jumps to starloop.
+; 2    resets to start of file and closes indexfile, then as 0
 
 .setbrkv        LDX     #$FF
-L807A = setbrkv+1
                 TXS
                 STZ     cursed
                 JSR     ackesc
@@ -395,7 +454,7 @@ L807A = setbrkv+1
 
                 EQUS    "Press ESCAPE to continue"
 
-.L8117          EQUB    $85,$0B,$0B,$09,$EA
+                EQUB    $85,$0B,$0B,$09,$EA
 
 .L811C          JSR     BRKOY
 
@@ -777,11 +836,16 @@ L807A = setbrkv+1
                 LDA     TMAX
                 LDX     TMAX+1
                 CLV
+;
+; Entry - IY temp -> name, addr = load address, AX = max free address
+; Exit - File checked for size (not on slow FS's)
+; File loaded to addr, with XY = top of file
+ 
 .pasloa         JSR     paslnm
 
                 JSR     prompt
 
-                EQUS    "Loading "
+               EQUS    "Loading "
 
                 EQUB    $EA
 
@@ -793,32 +857,31 @@ L807A = setbrkv+1
 
                 CMP     #$04
                 BCC     nosize
+                ; using a random access filing system,
+                ; so can quickly check size of file.
 
                 LDA     #$05
                 JSR     XYscra
-
                 JSR     OSFILE
-
                 CMP     #$01
-                BNE     nosize
-
-                LDA     scratc+$0C
-                ORA     scratc+$0D
+                BNE     nosize        ; Let FS generate 'Directory/not found' error
+                LDA     scratc + $0C
+                ORA     scratc + $0D
                 BNE     pas1hu
-
                 LDA     maxsiz
-                CMP     scratc+$0A
-                LDA     maxsiz+1
-                SBC     scratc+$0B
+                CMP     scratc + $0A
+                LDA     maxsiz + 1
+                SBC     scratc + $0B
                 BCC     pas1hu
 
 .nosize         LDA     ADDR
-                STA     scratc+2
-                LDA     ADDR+1
-                STA     scratc+3
-                STZ     scratc+4
-                STZ     scratc+5
-                STZ     scratc+6
+                ; Load file to addr, & set XY --> top of loaded file.
+                STA     scratc + 2
+                LDA     ADDR + 1
+                STA     scratc + 3
+                STZ     scratc + 4
+                STZ     scratc + 5
+                STZ     scratc + 6
                 LDA     #$FF
                 JSR     XYscra
 
@@ -840,40 +903,52 @@ L807A = setbrkv+1
                 EQUS    "File too big"
 
 .L83D7          BRK
-.tsave          EQUB    $B8
-
+.tsave          
+                ; Save (defaulting) marked block of text.
+                ; Entry - (temp),Y points to input name.
+                ; GE - Start of block
+                ; ENDP - End of block
+                ; Exit - specified memory saved as filename.
+                EQUB    $B8
                 JSR     filena
 
 .inSAVE         JSR     prompt
-
                 EQUS    "Saving to "
-
 .L83E9          NOP
                 JSR     writna
 
                 LDX     #$0F
-.pasac1         STZ     scratc+2,X
+.pasac1         STZ     scratc + 2,X
                 DEX
                 BPL     pasac1
 
-                DEC     scratc+6
-                DEC     scratc+7
-                DEC     scratc+8
-                DEC     scratc+9
+                DEC     scratc + 6
+                DEC     scratc + 7
+                DEC     scratc + 8
+                DEC     scratc + 9
                 LDA     GE
-                STA     scratc+$0A
+                STA     scratc + $0A
                 LDA     GE+1
-                STA     scratc+$0B
+                STA     scratc + $0B
                 LDA     ENDP
-                STA     scratc+$0E
-                LDA     ENDP+1
-                STA     scratc+$0F
+                STA     scratc + $0E
+                LDA     ENDP + 1
+                STA     scratc + $0F
                 LDA     #$00
                 JSR     XYscra
 
                 JMP     OSFILE
 
-.READNS         JSR     READLS
+.READNS         
+
+        ; Reads line to commandline (linbuf), & strips leading &
+        ; trailing spaces.
+        ; Exit - temp --> 1st non-space char on line
+        ; A      = 1st non-space char on line
+        ; Y      = 0
+        ; EQ if line was 'empty', else NE
+
+                JSR     READLS
 
                 TYA
                 BEQ     renSCR
@@ -908,13 +983,15 @@ L807A = setbrkv+1
 .readIN         LDY     #$00
                 BRA     readIM
 
-.READLS         LDA     #$20
+.READLS         LDA     space  
                 JSR     OSWRCH
 
-                LDA     #$06
+                ; Read line into linbuf/commandline, testing for escape.
+                ; Exit - Y = No. of chars read (excluding CR).
+
+                LDA     thelot
                 STA     UPDATE
                 JSR     rdlnre
-
                 BCC     escCLR
 
 .escSET         JSR     VSTRNG
@@ -982,7 +1059,12 @@ L807A = setbrkv+1
                 CLC
                 RTS
 
-.COPYBK         STX     SIZE
+.COPYBK         
+        ; Copy block backwards (i.e. to lower address).
+        ; Entry - ARGP --> block of size XY
+        ; VARP --> destination address 
+ 
+                STX     SIZE
                 STY     SIZE+1
                 LDA     SIZE
                 ORA     SIZE+1
@@ -1053,7 +1135,7 @@ L807A = setbrkv+1
 .chkptr         CMP     HYMEM+1
                 BCS     CHKPTX
 
-                CMP     PAJE+1
+                CMP     PAJEd
                 BCS     CHKPTX
 
                 PLA
@@ -1083,7 +1165,8 @@ L807A = setbrkv+1
                 BNE     STRINO
 
                 INC     STRING+1
-.STRINO         LDA     (STRING)
+
+.STRINO         LDA     (STRING)      ; enter here for normal string
                 CMP     #$EA
                 BNE     VSTRLM
 
@@ -1095,14 +1178,14 @@ L807A = setbrkv+1
                 STA     (OSHWM)
                 STA     (TMAX)
                 LDA     #$40
-                JSR     pre-domode
+                JSR     predomode
 
                 JSR     STFILE
 
                 JMP     STATUS
 
 .CRTOGG         LDA     #$20
-.pre-domode     EOR     options
+.predomode      EOR     options
 .domode         STA     options
                 PHX
                 PHY
@@ -1119,32 +1202,61 @@ L807A = setbrkv+1
                 BIT     options
                 RTS
 
+;                                      current
+;                                      line
+; PAJE                                                 HYMEM
+;  v                                   <......>          v
+; +-+-------------+-------------------+---------------+-+
+; |$|.............|                 |...............|$|
+; +-+-------------+-------------------+---------------+-+
+;    ^             ^                   ^               ^
+; TSTART           GS                  GE            TMAX
+; scrnXAs is X coord of cursor. (GE)creenX is char under cursor,
+; unless $ isA0 in (GE) .. (GE),scrnX (when it is that $).
+; scrnY is Y coord of current line on screen, and may be forced by the
+; screen update routine.
+; Screen update types:-
+;  none   ; Simple cursor movements
+;  csronw ; Character insert/delete
+;  fullsc ; Find,replace etc
+;  thelot ; Clears screen first. After tload etc
+;  hardup ; Special case, for cursor movevents
+;  harddo ; Special case, for cursor movevents
+;  pagewi ; is max X-coord of screen, and pagelength is max Y-coord of
+;           screen (thus Y-coord of status line is pagelength + 1).
+;  scrim  (screen image) holds maximum cursorX position written to each
+;         line on the screen (including the CR, if any)
+
 .EDIT           JSR     EDITmd
 
-.EDITin         LDX     tstart
+.EDITin         LDX     tstart       ; Initalize pointers to reflect empty buffer.
                 LDY     tstart+1
-.EDITgt         STZ     MODFLG
-.EDITgs         JSR     EDITtd
+.EDITgt         STZ     MODFLG       ; Re-entry point for Tload. XY = Enf of file.
+.EDITgs         JSR     EDITtd       ; Re-entry from OLDSTA, newmode
 
-.EDITco         LDX     #$FF
+.EDITco         LDX     #$FF         ; Re-entry point for brk-handler.
                 TXS
                 STZ     BRKACT
                 JSR     inited
 
 .L858F          LDA     #$06
                 STA     UPDATE
-.EDITlo         JSR     SCRNUD
-
+.EDITlo         JSR     SCRNUD        ; update screen to reflect previous command.
                 JSR     CSRSCR
-
                 JSR     CURON
 
-                LDA     #$05
+                LDA     #$05          ; FULLSC 
                 STA     UPDATE
+                ; Read a char, and branch depending on its value
+                ;   &00 - &7F     is ASCII input to be entered as text
+                ;   &80 - &8F     are softkey values       }
+                ;   &90 - &9F     are shift-softkey values } Editor commands
+                ;   &A0 - &AF     are ctrl-sofkkey values  }
+                ;   &8A, &9A, &AA is the TAB key
+                ;   &B0 - &FF     are entered into text (e.g. icelandics)
                 JSR     EDRDCH
 
                 BNE     EDITTE
-
                 TAX
                 LDX     cursed
                 BNE     EDITTE
@@ -1174,7 +1286,7 @@ L807A = setbrkv+1
 
                 EQUB    $EA
 
-.DEFVAL1        LDA     L87AB,Y
+.DEFVAL1        LDA     TXTTAB,Y
                 STA     ANOTHSTRING
                 LDA     L87AC,Y
                 STA     ANOTHSTRING+1
@@ -1222,19 +1334,23 @@ L807A = setbrkv+1
 
                 JMP     EDITlo
 
-.IADDRS         JMP     (L874B,X)
+.IADDRS         JMP     (EDCTBL,X)
 .EDITTE         JSR     EDTEXT
 
                 JMP     EDITlo
 
-.EDTEXT         CMP     #$7F
+.EDTEXT
+                ; Entry - A holds ASCII char to be treated as text input
+                ; Exit  - appropraite action taken depending on current
+                ;        'mode' (insert, overtype, csr-edit).
+
+                CMP     delete 
                 BEQ     ECHRDE
 
-                STZ     oldsta+3
-                CMP     #$0D
+                STZ     oldsta + 3
+                CMP     cr
                 BNE     ECHRCO
-
-                JSR     TESTIF
+                JSR     TESTIF ; in insert mode put in the CR
 
                 BNE     ECHRCR
 
@@ -1243,16 +1359,15 @@ L807A = setbrkv+1
                 BCS     ECHRCR
 
                 STZ     SCRNX
-                JMP     CURDWN
+                JMP     CURDWN ; in overtype mode CR is start of line
 
 .ECHRCR         LDA     termin
-.ECHRCO         PHA
+.ECHRCO         PHA            ; Insert character into text.
                 JSR     ADDVIR
+                ; Don't insert in overtype mode, unless at the end of line
 
                 JSR     TESTIF
-
                 BNE     ECHRMV
-
                 LDY     SCRNX
                 LDA     (GE),Y
                 CMP     termin
@@ -1265,6 +1380,7 @@ L807A = setbrkv+1
 .ECHRCH         PLA
                 LDY     SCRNX
                 STA     (GE),Y
+                ; Write char to screen (cursor OK), wiping tail for TERMIN.
                 CMP     termin
                 BNE     ECHRNT
 
@@ -1299,10 +1415,10 @@ L807A = setbrkv+1
                 STA     UPDATE
                 JMP     MODIFY
 
-.ECHRDE         JSR     VSCOUN
-
+.ECHRDE         
+                ; Delete virtual space implies csrleft. Can't delete start of file.
+                JSR     VSCOUN
                 BEQ     EDELST
-
                 JMP     CURLT
 
 .EDELST         LDA     SCRNX
@@ -1312,15 +1428,17 @@ L807A = setbrkv+1
 
                 BCS     DELABX
 
-.EDELCO         JSR     CURLT
-
-                JSR     LENGTH
-
+.EDELCO
+                ; Get char to be deleted under cursor. In absence of VS check 
+                ; this will give TERMIN delete when past end of line.
+                JSR     CURLT
+                JSR     LENGTH     ; different line than current!
                 CMP     SCRNX
                 BCS     EDELMT
-
                 STA     SCRNX
-.EDELMT         LDY     SCRNX
+
+.EDELMT         ; Branch on text-entry mode (insert/overtype). 
+                LDY     SCRNX
                 JSR     TESTIF
 
                 BNE     EDELSL
@@ -1390,21 +1508,21 @@ L807A = setbrkv+1
                 BNE     EDEL1
 
 .EDEL0          INC     UPDATE
-.EDEL1          JSR     MODIFY
-
+.EDEL1          ; Shift up start of line 'over' deleted character.
+                JSR     MODIFY
                 CLC
                 LDA     GE
                 STA     TEMP
                 ADC     SCRNX
                 STA     ADDR
-                LDA     GE+1
-                STA     TEMP+1
+                LDA     GE + 1
+                STA     TEMP + 1
                 ADC     #$00
-                STA     ADDR+1
+                STA     ADDR + 1
                 INC     GE
                 BNE     EDELNH
+                INC     GE + 1
 
-                INC     GE+1
 .EDELNH         LDY     SCRNX
                 BRA     EDELDY
 
@@ -1420,7 +1538,7 @@ L807A = setbrkv+1
                 LDY     SMATLO,X
                 CPY     ADDR
                 LDA     SMATHI,X
-                SBC     ADDR+1
+                SBC     ADDR + 1
                 BCS     EDELMK
 
                 INC     SMATLO,X
@@ -1429,88 +1547,89 @@ L807A = setbrkv+1
                 INC     SMATHI,X
                 BRA     EDELMK
 
-.L874B          EQUW    EDITLI
-                EQUW    edSTAR
-                EQUW    LOADfi
-                EQUW    SAVEfi
-                EQUW    FINDREPLACE
-                EQUW    GLOBALREP
-                EQUW    SETMARK
-                EQUW    MKCPY
-                EQUW    PRINT
-                EQUW    OLDTEXT
-                EQUW    TABKEY
-                EQUW    DELABV
-                EQUW    CURLT
-                EQUW    CURRT
-                EQUW    CURDWN
-                EQUW    CURUP
-                EQUW    CRTOGG
-                EQUW    IOtogg
-                EQUW    insrtF
-                EQUW    scmclr
-                EQUW    retlan
-                EQUW    GETMOD
-                EQUW    CLEARMARKS
-                EQUW    MKMVE
-                EQUW    MKDEL
-                EQUW    newtex
-                EQUW    tabctl
-                EQUW    allowC
-                EQUW    WORDLEFT
-                EQUW    WORDWRIGHT
-                EQUW    PAGEDN
-                EQUW    PAGEUP
-                EQUW    EDITlo
-                EQUW    EDITlo
-                EQUW    EDITlo
-                EQUW    EDITlo
-                EQUW    EDITlo
-                EQUW    EDITlo
-                EQUW    tsmcsr
-                EQUW    bsmcsr
-                EQUW    cf8swt
-                EQUW    EDITlo
-                EQUW    EDITlo
-                EQUW    DELLIN
-                EQUW    curst
-                EQUW    curend
-                EQUW    CUREDF
-                EQUW    STFILE
+.EDCTBL         EQUW    EDITLI            ; f0
+                EQUW    edSTAR            ; f1
+                EQUW    LOADfi            ; f2
+                EQUW    SAVEfi            ; f3
+                EQUW    FINDREPLACE       ; f4
+                EQUW    GLOBALREP         ; f5
+                EQUW    SETMARK           ; f6
+                EQUW    MKCPY             ; f7
+                EQUW    PRINT             ; f8
+                EQUW    OLDTEXT           ; f9
+                EQUW    TABKEY            ; f10
+                EQUW    DELABV            ; copy 
+                EQUW    CURLT             ; left 
+                EQUW    CURRT             ; right 
+                EQUW    CURDWN            ; down 
+                EQUW    CURUP             ; up
 
-.L87AB          EQUW    L8D0D
+                EQUW    CRTOGG            ; shift-f0
+                EQUW    IOtogg            ; shift-f1
+                EQUW    insrtF            ; shift-f2
+                EQUW    scmclr            ; shift-f3
+                EQUW    retlan            ; shift-f4
+                EQUW    GETMOD            ; shift-f5
+                EQUW    CLEARMARKS        ; shift-f6
+                EQUW    MKMVE             ; shift-f7
+                EQUW    MKDEL             ; shift-f8
+                EQUW    newtex            ; shift-f9
+                EQUW    tabctl            ; shift-f10
+                EQUW    allowC            ; shift-copy
+                EQUW    WORDLEFT          ; shift-left
+                EQUW    WORDWRIGHT        ; shift-right
+                EQUW    PAGEDN            ; shift-down
+                EQUW    PAGEUP            ; shift-up
+                
+                EQUW    EDITlo            ; ctrl-f0
+                EQUW    EDITlo            ; ctrl-f1
+                EQUW    EDITlo            ; ctrl-f2
+                EQUW    EDITlo            ; ctrl-f3
+                EQUW    EDITlo            ; ctrl-f4
+                EQUW    EDITlo            ; ctrl-f5
+                EQUW    tsmcsr            ; ctrl-f6
+                EQUW    bsmcsr            ; ctrl-f7
+                EQUW    cf8swt            ; ctrl-f8
+                EQUW    EDITlo            ; ctrl-f9
+                EQUW    EDITlo            ; ctrl-f10
+                EQUW    DELLIN            ; ctrl-copy
+                EQUW    curst             ; ctrl-left
+                EQUW    curend            ; ctrl-right
+                EQUW    CUREDF            ; ctrl-down
+                EQUW    STFILE            ; ctrl-up
+
+.TXTTAB         EQUW    F0
                 EQUW    F1
                 EQUW    F2
                 EQUW    F3
-                EQUW    L8F8F
-                EQUW    L90A2
+                EQUW    F4
+                EQUW    F5
                 EQUW    F6
                 EQUW    F7
                 EQUW    F8
-                EQUW    L93B4
-                EQUW    L93B4
-                EQUW    L93B4
-                EQUW    L93B4
-                EQUW    L93B4
-                EQUW    L93B4
-                EQUW    L93B4
-                EQUW    L8D64
+                EQUW    F9
+                EQUW    F9
+                EQUW    F9
+                EQUW    F9
+                EQUW    F9
+                EQUW    F9
+                EQUW    F9
+                EQUW    SHFF0
                 EQUW    SHFF1
                 EQUW    SHFF2
                 EQUW    SHFF3
-                EQUW    L904D
+                EQUW    L904D    ; Can't find this in code
                 EQUW    SHFF5
                 EQUW    SHFF6
                 EQUW    SHFF7
                 EQUW    SHFF8
                 EQUW    SHFF9
-                EQUW    L9477
-                EQUW    L94F9
+                EQUW    SHFTAB
+                EQUW    SHFCOP
 
-                L87AC   = L87AB+1
-.BIGMESS        EQUW    $3220
+.BIGMESS        JSR VSTRNG 
 
-                EQUB    $85,$82
+                EQUB    $82
 
                 EQUS    "shf-f0"
 
@@ -1846,159 +1965,28 @@ L807A = setbrkv+1
                 LDY     #$07
                 BRA     L8C49
 
-                BRK
-                EQUB    $00
+                EQUB    $00,$00,$00,$FF,$00,$00,$00,$00
+                EQUB    $18,$18,$18,$18,$18,$18,$18,$18
+                EQUB    $00,$00,$00,$07,$0C,$18,$18,$18
+                EQUB    $00,$00,$00,$E0,$30,$18,$18,$18
+                EQUB    $18,$18,$0C,$07,$00,$00,$00,$00
+                EQUB    $18,$18,$30,$E0,$00,$00,$00,$00
+                EQUB    $7E,$C3,$9D,$B1,$9D,$C3
 
-                BRK
-                EQUB    $FF
+                EQUB    $7E,$00,$00,$18,$38,$7F,$38,$18
+                EQUB    $00,$00,$00,$18,$1C,$FE,$1C,$18
+                EQUB    $00,$00,$18,$18,$18,$18,$7E,$3C
+                EQUB    $18,$00,$00,$18,$3C,$7E,$18,$18
+                EQUB    $18,$18,$00,$00,$00,$1F,$00,$00
+                EQUB    $00,$00,$00,$00,$00,$F8,$00,$00
+                EQUB    $00,$00,$00,$00,$00,$FF,$18,$18
+                EQUB    $18,$18,$18,$18,$18,$1F,$18,$18
+                EQUB    $18,$18,$18,$18,$18,$F8,$18,$18
+                EQUB    $18,$18,$18,$18,$18,$FF,$00,$00
+                EQUB    $00,$00,$18,$18,$18,$FF,$18,$18
+                EQUB    $18,$18
 
-                BRK
-                EQUB    $00
-
-                BRK
-                EQUB    $00
-
-                CLC
-                CLC
-                CLC
-                CLC
-.L8C89          CLC
-                CLC
-                CLC
-                CLC
-                BRK
-                EQUB    $00
-
-                BRK
-                EQUB    $07
-
-                TSB     L1818
-                CLC
-                BRK
-                EQUB    $00
-
-                BRK
-                EQUB    $E0
-
-                BMI     L8CB3
-
-                CLC
-                CLC
-                CLC
-                CLC
-                TSB     TEMP+1
-                BRK
-                EQUB    $00
-
-                BRK
-                EQUB    $18
-
-                CLC
-                BMI     L8C89
-
-                BRK
-                EQUB    $00
-
-                BRK
-                EQUB    $00
-
-                ROR     L9DC3,X
-                LDA     (L009D),Y
-.L8CB3          ROR     STRING,X
-                CLC
-                SEC
-                SEC
-                CLC
-                BRK
-                EQUB    $00
-
-                BRK
-                EQUB    $18
-
-                TRB     L1CFE
-                CLC
-                BRK
-                EQUB    $00
-
-                CLC
-                CLC
-                CLC
-                CLC
-                ROR     L183C,X
-                BRK
-                EQUB    $00
-
-                CLC
-                BIT     L187E,X
-                CLC
-                CLC
-                CLC
-                BRK
-                EQUB    $00
-
-                BRK
-                EQUB    $1F
-
-                BRK
-                EQUB    $00
-
-                BRK
-                EQUB    $00
-
-                BRK
-                EQUB    $00
-
-                BRK
-                EQUB    $F8
-
-                BRK
-                EQUB    $00
-
-                BRK
-                EQUB    $00
-
-                BRK
-                EQUB    $00
-
-                BRK
-                EQUB    $FF
-
-                CLC
-                CLC
-                CLC
-                CLC
-                CLC
-                CLC
-                CLC
-                CLC
-                CLC
-                CLC
-                CLC
-                CLC
-                CLC
-                CLC
-                SED
-                CLC
-                CLC
-                CLC
-                CLC
-                CLC
-                CLC
-                CLC
-                BRK
-                EQUB    $00
-
-                BRK
-                EQUB    $00
-
-                CLC
-                CLC
-                CLC
-                CLC
-                CLC
-                CLC
-                CLC
-.L8D0D          EQUS    "f0"
+.F0             EQUS    "f0"
 
                 EQUB    $0D
 
@@ -2024,12 +2012,11 @@ L807A = setbrkv+1
 
                 EQUB    $8A,$2E,$EA
 
-                BMI     L8D74
+.SHFF0          EQUS    $07,"0"
 
-                STY     L6E65
-                EQUS    "ends of line"
+                EQUB    $0D,$8C
 
-.L8D74          EQUS    "s can be shown as a special"
+                EQUS    "ends of lines can be shown as a special"
 
                 EQUB    $0D
 
@@ -2141,7 +2128,7 @@ L807A = setbrkv+1
 
                 EQUB    $91,$37,$EA
 
-.L8F8F          EQUS    "f4:- Interactive Find and Replace Function."
+.F4             EQUS    "f4:- Interactive Find and Replace Function."
 
                 EQUB    $0D,$8A,$92
 
@@ -2184,7 +2171,7 @@ L807A = setbrkv+1
 
                 EQUB    $EA
 
-.L90A2          EQUS    "f5:- Global replace.              All, or"
+.F5             EQUS    "f5:- Global replace.              All, or"
 
                 EQUB    $89,$8E,$2E,$8A,$92
 
@@ -2342,7 +2329,7 @@ L807A = setbrkv+1
 
                 EQUB    $EA
 
-.L93B4          ROR     LNBUFX
+.F9             ROR     LNBUFX
                 ORA     L6F8C
                 EQUS    "old"
 
@@ -2392,7 +2379,7 @@ L807A = setbrkv+1
 
                 EQUB    $EA
 
-.L9477          EQUS    "shf-TAB"
+.SHFTAB         EQUS    "shf-TAB"
 
                 EQUB    $0D,$8C
 
@@ -2428,7 +2415,7 @@ L807A = setbrkv+1
 
                 EQUB    $EA
 
-.L94F9          EQUS    "shf-COPY"
+.SHFCOP         EQUS    "shf-COPY"
 
                 EQUB    $0D
 
@@ -2445,9 +2432,16 @@ L807A = setbrkv+1
 
                 EQUB    $8E,$2E,$EA
 
-.inited         LDA     #$04
+.inited
+                ; Set up edit keys as softkeys, and set softkeys to have
+                ; following bases -
+                ; plain = &80
+                ; shift = &90
+                ; ctrl  = &A0
+ 
+                LDA     #$04
                 LDX     #$02
-                JSR     OSBYTE
+                JSR     OSBYTE     ; tab key pretends to be soft key 10
 
                 LDA     #$DB
                 LDX     #$8A
@@ -2466,9 +2460,11 @@ L807A = setbrkv+1
 .OSBYTEwithY    LDY     #$00
                 JMP     OSBYTE
 
-.initus         LDA     #$DB
+.initus         
+                ; Return cursor-keys & softkeys to 'normal' state.
+                LDA     #$DB
                 LDX     #$09
-                JSR     OSBYTEwithY
+                JSR     OSBYTEwithY     ; tab key emits 9
 
                 LDA     #$04
                 LDX     #$00
@@ -2485,13 +2481,17 @@ L807A = setbrkv+1
                 LDX     #$01
                 BRA     INITEX
 
-.STARTTEST      LDA     tstart
+.STARTTEST      
+                ; Returns CS if on 1st Line (GS = TSTART), else CC.
+                LDA     tstart
                 CMP     GS
                 LDA     tstart+1
                 SBC     GS+1
                 RTS
 
-.ENDTES         CLC
+.ENDTES         
+                ; Returns CS if on last line (GE + ScrimcreenY = TMAX), clse CC.
+                CLC
                 LDA     CURRLEN
                 ADC     GE
                 TAX
@@ -2501,7 +2501,9 @@ L807A = setbrkv+1
                 SBC     TMAX+1
                 RTS
 
-.LENGTH         LDY     #$00
+.LENGTH         
+                ; find length of current line. Exit - A = length = 1
+                LDY     #$00
 .LECCLO         LDA     (GE),Y
                 CMP     termin
                 BEQ     LECCRE
@@ -2513,29 +2515,39 @@ L807A = setbrkv+1
 .LECCRE         TYA
                 RTS
 
-.CHECKR         STX     SIZE
-                STY     SIZE+1
+.CHECKR         
+                ; Check for space in edit buffer.
+                ; Entry - XY = required No. of bytes
+                ; Exit  - size = XY
+                ;         XY = temp = GE - XY
+                ;         Error if temp < GS
+
+                STX     SIZE
+                STY     SIZE + 1
                 SEC
                 LDA     GE
                 SBC     SIZE
                 TAX
-                LDA     GE+1
-                SBC     SIZE+1
+                LDA     GE + 1
+                SBC     SIZE + 1
                 TAY
                 STX     TEMP
-                STY     TEMP+1
+                STY     TEMP + 1
                 CPX     GS
-                SBC     GS+1
+                SBC     GS + 1
                 BCS     VDU23X
-
-                JMP     CHNRRERR
+                JMP     CHNRRERR        ; 'No room'
 
 .CURON          LDY     #$01
                 BRA     VDU231
 
 .CUROFF         LDY     #$00
 .VDU231         LDX     #$01
-.VDU23          LDA     #$17
+.VDU23          
+                ; Entry - X = 1st byte, Y = 2nd byte
+                ; Exit  - VDU 23,X,Y,0,0,0,0,0,0,0 Output.
+
+                LDA     #$17
                 JSR     CSRXY0
 
                 LDX     #$08
@@ -2568,9 +2580,7 @@ L807A = setbrkv+1
 .DOTUT          PHA
                 JSR     VSTRNG
 
-                EQUB    $85,$1A,$1E,$EA
-
-                EQUB    $EA
+                EQUB    $1A,$1E,$EA
 
 .L964F          JSR     startI
 
@@ -2587,16 +2597,13 @@ L807A = setbrkv+1
 .L9660          JSR     L8C77
 
 .KEYONL         JSR     stopin
-
-                JSR     GETWIN
-
-                STA     REALPA
+                JSR     GETWIN          ; get size of total scren
+                STA     REALPA          ; pagelength in A
                 JSR     DECWIN
 
-.NOTTUT         JSR     GETWIN
-
-                TAX
-                INX
+.NOTTUT         JSR     GETWIN          ; get size of working area
+                TAX                     ; pagelength again in A
+                INX                     ; Initalize scrim.
                 LDA     PAGEWI
 .SCMILO         STA     SCRIM,X
                 DEX
@@ -2646,7 +2653,8 @@ L807A = setbrkv+1
 .NOWIND         LDA     #$1A
                 JMP     OSWRCH
 
-.EDRDCH         LDA     NEXTREADFLAG
+.EDRDCH         ; Exit - A holds character read 
+                LDA     NEXTREADFLAG
                 BEQ     EDRDOSRD
 
                 LDA     NXTCHR
@@ -2703,27 +2711,19 @@ L807A = setbrkv+1
 .tabctl         LDA     #$08
 .L9703          JSR     pre-domode
 
-.CstatU         STZ     UPDATE
-.STATUS         JSR     CSR0STATUSY
-
-                JSR     startI
-
+.CstatU         STZ     UPDATE              ; update required 
+.STATUS         JSR     CSR0STATUSY         ; Output status on status line.
+                JSR     startI              ; Start inverse
                 JSR     TESTIF
-
                 BEQ     STATSO
 
                 JSR     VSTRNG
-
                 EQUS    "Insert "
-
                 EQUB    $EA
-
 .L971E          BRA     STATSI
 
 .STATSO         JSR     VSTRNG
-
                 EQUS    "Over   "
-
                 EQUB    $EA
 
 .STATSI         LDX     cursed
@@ -2809,27 +2809,23 @@ STRMEX = STATSI+1
                 BEQ     STATcr
 
                 JSR     VSTRNG
-
                 EQUS    " LF"
-
                 EQUB    $EA
 
 .L97D1          BRA     STATlf
 
 .STATcr         JSR     VSTRNG
-
                 EQUS    " CR"
-
                 EQUB    $EA
 
 .STATlf         LDX     #$1D
                 STX     PRMPTL
-                JSR     stopin
+                JSR     stopin  ; stop inverse
 
                 LDY     PAGELE
                 INY
-                LDA     #$1C
-                JMP     WIPETA
+                LDA     #$1C    ; (PRMPTL - 1 + $prmod) plus any modifications
+                JMP     WIPETA  ; and clear the rest of the line
 
 .promtF         JSR     prompt
 
@@ -2887,23 +2883,29 @@ STRMEX = STATSI+1
                 TYA
                 JMP     OSWRCH
 
-.NORMAL         LDA     GS
+.NORMAL         
+                ; Entry : gap character positioned
+                ; Exit : gap moved to start of current line
+                LDA     GS
                 STA     TEMP
-                LDA     GS+1
-                STA     TEMP+1
+                LDA     GS + 1
+                STA     TEMP + 1
                 JSR     FINDPO
-
                 STA     STRING
                 SEC
                 LDA     GS
                 SBC     STRING
                 TAX
-                LDA     GS+1
+                LDA     GS + 1
                 SBC     #$00
                 TAY
                 JMP     GPBKXY
 
-.FINDPO         CLC
+.FINDPO         
+                ; Entry : temp-> middle of line in 1st half of text
+                ; Exit  : A[Z]  = xcoord (0..page..width) of pointer within line.
+                ;         Y(=atemp) = page_width - A  
+                CLC     ; -1
                 LDA     TEMP
                 SBC     PAGEWI
                 STA     TEMP
@@ -2915,9 +2917,10 @@ STRMEX = STATSI+1
                 CMP     termin
                 BEQ     FIPOL2
 
-.FIPOE2         DEY
+.FIPOE2     
+                ; Entry point, when called from tempbacklines.
+                DEY
                 BPL     FIPOLP
-
                 BMI     FINDPO
 
 .FIPOL2         STY     ATEMP
@@ -2926,11 +2929,20 @@ STRMEX = STATSI+1
                 SBC     ATEMP
                 RTS
 
-.TPGEFD         LDX     GE
-                LDY     GE+1
+.TPGEFD         
+                ; TP := GE + A lines
+                LDX     GE
+                LDY     GE + 1
                 STX     TP
-                STY     TP+1
-.TPFWDA         TAX
+                STY     TP + 1
+
+.TPFWDA         
+                ; Moves pointer TP forward A lines.
+                ; Entry - A = No. of lines to advance TP
+                ; Exit  - TP advanced (possibly by less than A lines if hit EOT)
+                ;         count = No. of lines remaining from original request.
+                ;         atemp = Last end of line character.
+                TAX
                 STX     COUNT
                 BEQ     TPTPEX
 
@@ -2954,24 +2966,32 @@ STRMEX = STATSI+1
 
 .TPTPEX         RTS
 
-.TPPAP1         SEC
+.TPPAP1         
+                ; Exit  -  CC TP = TP  +  (A + 1). CS TP + (A + 1) = HYMEM,
+                ;          TP unchanged.
+                SEC
                 ADC     TP
                 TAX
                 LDA     #$00
-                ADC     TP+1
+                ADC     TP + 1
                 TAY
-                CPX     HIMEM
-                SBC     HYMEM+1
+                CPX     HYMEM
+                SBC     HYMEM + 1
                 BCS     TPPAPX
 
                 STX     TP
-                STY     TP+1
+                STY     TP + 1
 .TPPAPX         RTS
 
-.TPGSBK         LDX     GS
-                LDY     GS+1
+.TPGSBK         
+                ; TP := GS - A lines
+                ; Entry - A = No. of lines to retreat XY.
+                ; Exit  - TP retreated
+                ;         A = No. of lines was able to go back.
+                LDX     GS
+                LDY     GS + 1
                 STX     TP
-                STY     TP+1
+                STY     TP + 1
                 TAX
                 STX     COUNT
                 BEQ     TPXYEX
@@ -2979,17 +2999,17 @@ STRMEX = STATSI+1
                 LDX     #$00
 .TPXYLP         LDA     tstart
                 CMP     TP
-                LDA     tstart+1
-                SBC     TP+1
+                LDA     tstart + 1
+                SBC     TP + 1
                 BCS     TPXYAB
 
-                CLC
+                CLC     ; - 1
                 LDA     TP
                 SBC     PAGEWI
                 STA     TP
                 BCS     TPXYND
 
-                DEC     TP+1
+                DEC     TP + 1
 .TPXYND         LDY     PAGEWI
                 LDA     (TP),Y
                 CMP     termin
@@ -3003,8 +3023,8 @@ STRMEX = STATSI+1
 
                 BEQ     TPXYCO
 
-                TYA
-                ADC     TP
+                TYA                     ; answer from FINDPO in Y
+                ADC     TP              ; + 1 from CS
                 STA     TP
                 BCC     TPXYCO
 
@@ -3018,46 +3038,56 @@ STRMEX = STATSI+1
 
 .PAGEUP         LDA     PAGELE
                 INC     A
-.MVLNBK         JSR     TPGSBK
-
+.MVLNBK         
+                ; Entry - A = No. of lines to move gap back.
+                ; Exit  - Gap moved back A lines. May be moved less if
+                ;         hits start of file.
+                JSR     TPGSBK
                 LDX     TP
-                LDY     TP+1
-.GPBKXY         STX     ARGP
-                STY     ARGP+1
+                LDY     TP + 1
+.GPBKXY         
+                ; Move gap back so that GS := XY
+                STX     ARGP
+                STY     ARGP + 1
                 SEC
                 LDA     GS
                 SBC     ARGP
                 STX     GS
                 TAX
-                LDA     GS+1
-                SBC     ARGP+1
-                STY     GS+1
+                LDA     GS + 1
+                SBC     ARGP + 1
+                STY     GS + 1
                 TAY
                 STX     SIZE
-                STY     SIZE+1
+                STY     SIZE + 1
                 LDA     GE
                 SBC     SIZE
                 STA     VARP
                 STA     GE
-                LDA     GE+1
-                SBC     SIZE+1
-                STA     VARP+1
-                STA     GE+1
+                LDA     GE + 1
+                SBC     SIZE + 1
+                STA     VARP + 1
+                STA     GE + 1
+.COPYFD
+                ; Copy block forward (i.e. to higher address).
+                ; Entry - ARGP --> block of size XY
+                ;         VARP --> destination address 
+                ; Exit  - ARGP,VARP uncorrupted.
                 STX     SIZE
-                STY     SIZE+1
+                STY     SIZE + 1
 .CPFD2          LDA     SIZE
                 TAY
-                ORA     SIZE+1
+                ORA     SIZE + 1
                 BEQ     CPFDEX
 
-                LDX     SIZE+1
+                LDX     SIZE + 1
                 CLC
                 TXA
-                ADC     ARGP+1
-                STA     ARGP+1
+                ADC     ARGP + 1
+                STA     ARGP + 1
                 TXA
-                ADC     VARP+1
-                STA     VARP+1
+                ADC     VARP + 1
+                STA     VARP + 1
                 INX
                 BCC     CPFDL2
 
@@ -3070,8 +3100,8 @@ STRMEX = STATSI+1
                 DEX
                 BEQ     CPFDEX
 
-                DEC     ARGP+1
-                DEC     VARP+1
+                DEC     ARGP + 1
+                DEC     VARP +  1
                 BNE     CPFDLP
 
 .CPFDEX         RTS
@@ -3081,15 +3111,17 @@ STRMEX = STATSI+1
 .MVLNFD         JSR     TPGEFD
 
 .GPFDTP         LDX     TP
-                LDY     TP+1
-.GPFDXY         LDA     GE
+                LDY     TP + 1
+.GPFDXY         
+                ; Move gap forward so that GE := XY
+                LDA     GE
                 STA     ARGP
-                LDA     GE+1
-                STA     ARGP+1
+                LDA     GE + 1
+                STA     ARGP + 1
                 LDA     GS
                 STA     VARP
-                LDA     GS+1
-                STA     VARP+1
+                LDA     GS + 1
+                STA     VARP + 1
                 SEC
                 TXA
                 SBC     GE
@@ -3112,13 +3144,15 @@ STRMEX = STATSI+1
                 STA     GE+1
                 JMP     COPYBK
 
-.FINEPO         JSR     ADDVIR
-
+.FINEPO         
+        ; Entry - Gap line positioned, without VS in text.
+        ; Exit  - Gap character positioned, with VS added.
+                JSR     ADDVIR
                 CLC
                 LDA     GE
                 ADC     SCRNX
                 TAX
-                LDA     GE+1
+                LDA     GE + 1
                 ADC     #$00
                 TAY
                 BRA     GPFDXY
@@ -3131,7 +3165,7 @@ STRMEX = STATSI+1
                 TAX
                 LDA     CURRLEN
                 JSR     INSRTX
-
+                ; Wipe possible visible TERMIN.
                 LDX     CURRLEN
                 LDY     SCRNY
                 JSR     CSRXY
@@ -3139,7 +3173,7 @@ STRMEX = STATSI+1
                 LDA     #$20
                 JSR     OSWRCH
 
-                PLX
+                PLX     ; number spaces from VSCOUN
                 LDY     SCRNX
 .ADVSLP         DEY
                 STA     (GE),Y
@@ -3148,7 +3182,9 @@ STRMEX = STATSI+1
 
 .ADVSEX         JMP     CSRSCR
 
-.VSCOUN         SEC
+.VSCOUN         
+                ; Exit A(Z) = Number of virtual spaces.
+                SEC
                 LDA     SCRNX
                 SBC     CURRLEN
                 BCS     VSCTEX
@@ -3156,7 +3192,11 @@ STRMEX = STATSI+1
                 LDA     #$00
 .VSCTEX         RTS
 
-.INSRTX         STA     ATEMP
+.INSRTX         
+                ; Entry - Require gap of XY ( > 0) opening up after GE  +  A
+                ; Exit  - GE -= XY (checked against GS)
+                ;         A chars moved back to new GE, to open up gap
+                STA     ATEMP
                 CLC
                 ADC     GE
                 PHA
@@ -3175,12 +3215,12 @@ STRMEX = STATSI+1
                 BCC     INSXLP
 
                 STX     GE
-                LDA     TEMP+1
-                STA     GE+1
+                LDA     TEMP + 1
+                STA     GE + 1
                 PLX
                 STX     COUNT
                 PLA
-                STA     TEMP+1
+                STA     TEMP + 1
                 PLA
                 STA     TEMP
                 LDY     MARKX
@@ -3281,7 +3321,7 @@ STRMEX = STATSI+1
 
                 LDA     GE+1
                 DEC     A
-                CMP     PAJE+1
+                CMP     PAJEd
                 BCS     RETLOK
 
                 BRK
@@ -3292,17 +3332,17 @@ STRMEX = STATSI+1
                 EQUB    $00
 
 .RETLOK         LDA     #$FF
-                STA     BRKACT
-                LDA     PAJE+1
+                STA     BRKACT          ; pretty leathal break action rqd
+                LDA     PAJE + 1
                 INC     A
-                STA     ARGP+1
+                STA     ARGP + 1
                 STZ     ARGP
                 LDA     #$00
-                STA     (TMAX)
+                STA     (TMAX)          ; terminating zero
                 LDA     GE
                 STA     ADDR
-                LDA     GE+1
-                STA     ADDR+1
+                LDA     GE + 1
+                STA     ADDR + 1
 .RELLOP         LDA     (ADDR)
                 STA     (ARGP)
                 INC     ARGP
@@ -3311,74 +3351,47 @@ STRMEX = STATSI+1
                 INC     ARGP+1
 .RELLOQ         INC     ADDR
                 BNE     RELLOP
+                INC     ADDR + 1
+                LDA     ADDR + 1
+                EQUB    $09             ; Is this right??? TODO
 
-                INC     ADDR+1
-                LDA     ADDR+1
-                EQUB    $09
-
-                CMP     HYMEM+1
+                CMP     HYMEM + 1
                 BNE     RELLOP
-
                 JSR     CURON
-
                 JSR     VSTRNG
-
                 EQUB    $1A
-
                 EQUB    $0C,$EA
-
 .L9B12          JSR     initus
-
-                LDA     PAJE+1
+                LDA     PAJE + 1
                 INC     A
-                STA     STRING+1
+                STA     STRING + 1   ; set 0 to PAGE + 256
                 STZ     STRING
-                LDX     #$00
-                LDY     #$05
+                LDX     #$00            ; LINBUF
+                LDY     #$05            ; /LINBUF 
                 JMP     OSCLI
 
 .PRINHL         JSR     LA0FE
 
 .L9B26          EQUB    $0E
-
                 EQUB    $0D,$0D
-
                 EQUS    "Format commands:- {initial values}"
-
                 EQUB    $0D,$83
-
                 EQUS    "afrn assign format n to register r {0}"
-
                 EQUB    $83
-
                 EQUS    "anrn assign number to register r {0}"
-
                 EQUB    $83,$62,$6C,$81
-
                 EQUS    "bold"
-
                 EQUB    $84,$83,$62,$70,$81
-
                 EQUS    "begin"
-
                 EQUB    $85,$83
-
                 EQUS    "cc c control"
-
                 EQUB    $86
-
                 EQUS    "is c {.}"
-
                 EQUB    $83,$63,$65,$81
-
                 EQUS    "centre"
-
                 EQUB    $84,$83
-
                 EQUS    "ch*c chain in next file"
-
                 EQUB    $83,$63,$6F,$81
-
                 EQUS    "comment"
 
                 EQUB    $84,$83
@@ -3479,9 +3492,7 @@ STRMEX = STATSI+1
 
                 EQUB    $83
 
-                EQUS    "ne n n"
-
-.L9DC3          EQUS    "eeds n output"
+                EQUS    "ne n needs n output"
 
                 EQUB    $84
 
@@ -3630,7 +3641,6 @@ STRMEX = STATSI+1
                 EQUB    $0F,$0D,$0D,$EA
 
 .LA0F8          JSR     INKEYS
-
                 JMP     EDITco
 
 .LA0FE          PLA
@@ -3638,7 +3648,6 @@ STRMEX = STATSI+1
                 PLA
                 STA     ANOTHSTRING+1
                 JSR     LA10D
-
                 JMP     (ANOTHSTRING)
 
 .LA10A          JSR     LA11A
@@ -3831,51 +3840,46 @@ STRMEX = STATSI+1
 
                 JMP     EDITco
 
-.PRINTH         JMP     PRINHL
+.PRINTH         JMP     PRINHL          ; help on print 
 
 .PRINT          JSR     MKREFUSE
 
                 LDX     #$FF
                 STX     PWTFLG
-                STX     PRTFLG
-                STX     LINEOT
+                STX     PRTFLG          ; bit 7 printer, bit 6 pay attention to bold/underlining 
+                STX     LINEOT          ; set needs header flag
                 TXS
                 JSR     prompt
 
                 EQUS    "Screen, Printer, As is, Help ?"
-
                 EQUB    $EA
 
 .PRINTL         JSR     GETRESP
-
-                CMP     #$61
+                CMP     "a"
                 BEQ     PRINASIS
 
-                CMP     #$68
+                CMP     "h"
                 BEQ     PRINTH
 
-                CMP     #$73
+                CMP     "s"
                 BEQ     PRINTS
 
-                CMP     #$70
-                BNE     PRINTL
-
-                STZ     PRTFLG
+                CMP     "p"
+                BNE     PRINTL      
+                STZ     PRTFLG          ; 0 for printer
 .PRINTS         JSR     prompt
-
                 EQUS    "Continuous, Paged ?"
-
                 EQUB    $EA
 
 .PRINTM         JSR     GETRESP
 
-                CMP     #$63
+                CMP     "c"
                 BEQ     PRINTC
 
-                CMP     #$70
+                CMP     "p"
                 BNE     PRINTM
 
-                STZ     PWTFLG
+                STZ     PWTFLG          ; 0 for paged output
 .PRINTC         JSR     memstate
 
                 LDA     tstart
@@ -3885,14 +3889,14 @@ STRMEX = STATSI+1
                 LDA     #$2E
                 STA     CTLCHA
                 LDX     #$00
-.CLRREG         STZ     LINBUFF,X
+.CLRREG         STZ     noregs,X   ; noregs(linbuff)  : clears noregs, tablst, maclst
                 INX
                 TXA
-                STA     stracc,X
+                STA     trnlst,X   ; trnlst(stracc) : init translation
                 BNE     CLRREG
 
-                LDA     #$20
-                STA     L06A0
+                LDA     space
+                STA     L06A0       
                 LDY     termin
                 CPY     #$0D
                 BNE     LA315
@@ -3902,40 +3906,37 @@ STRMEX = STATSI+1
 
 .LA315          STA     L060D
 .LA318          LDA     #$09
-                STA     mark_count
-                DEC     A
+                STA     mark_count ; tabcha(mark_count)
+                DEC     A          ; to 8
                 CLC
 .DEFTAB         STA     TABLST,X
                 INX
-                ADC     #$08
+                ADC     #$08    ; carry clear
                 CMP     #$64
                 BCC     DEFTAB
-
                 LDA     #$02
                 STA     BRKACT
                 DEC     A
-                STA     LINBUFF
-                STA     UMATHI+1
-                STA     LINENO
-                STZ     LINE
-                STZ     INDEXH
-                STZ     UMATLO+1
-                STZ     PBOLD
-                STZ     SMATHI+1
-                STZ     FILL
-                STZ     OFFSET
-                STZ     SMATLO+1
-                LDA     #$3A
-                STA     LINEDW
-                LDA     #$4C
-                STA     SMATHI
+                STA     LINBUFF   ; LINBUFF(PAGE) : A = 1
+                STA     UMATHI+1  ; single spacing
+                STA     LINENO   
+                STZ     LINE      ; no indexing LINE(DOINDX)
+                STZ     INDEXH    ; index file handle
+                STZ     UMATLO+1  ; persistent underline off UMATLO+1(PUNDRL)
+                STZ     PBOLD     ; persistent bold off
+                STZ     SMATHI+1  ; turn off indent : SMATHI+1(INDENT)
+                STZ     FILL      ; enable justification
+                STZ     OFFSET    ; no page offset
+                STZ     SMATLO+1  ; no overprinting : SMATHLO+1(LINFED)
+                LDA     #$3A      ; 58
+                STA     LINEDW    ; lines per page
+                LDA     #$4C      ; 76
+                STA     SMATHI    ; characters per line : SMATHI(LEN)
                 JSR     VSTRNG
-
                 EQUB    $1A,$0C,$EA
 
 .LA353          BIT     PRTFLG
                 BMI     PATCHA
-
                 JSR     rstPrtDes
 
 .PATCHA         BIT     PWTFLG
@@ -3945,7 +3946,7 @@ STRMEX = STATSI+1
                 BPL     CHAINB
 
                 LDA     #$0E
-                JSR     OSWRCH
+                JSR     OSWRCH    ; page mode if screen and wait
 
 .CHAINB         LDA     termin
                 STA     (GS)
@@ -3966,52 +3967,45 @@ STRMEX = STATSI+1
                 STY     PAGEEF+1
                 STY     PAGEOF+1
                 LDX     #$D0
-.CHAINC         STZ     L052F,X
+.CHAINC         STZ     L052F,X    ; L052F(MACLST-1)
                 DEX
                 BNE     CHAINC
 
-.FINE           STZ     CENTRE
-                STZ     SMATLO
+.FINE           STZ     CENTRE     ; turn centre off
+                STZ     SMATLO     ; turn right-flush off
                 LDA     #$FF
-                STA     TINDEN
-                LDA     UMATLO+1
-                STA     UMATLO
-                STA     UNDRRQ
+                STA     TINDEN     ; no temp indent
+                LDA     UMATLO+1   ; UMATHLO+1 (PUNDRL)
+                STA     UMATLO     ; UMATHLO (UNDERL)
+                STA     UNDRRQ     ; underline required?
                 LDA     PBOLD
-                STA     UMATHI
+                STA     UMATHI     ; UMATHI (BOLD)
                 STA     BOLDRQ
                 BRA     CTLIN
 
 .LASLEN         JSR     ROUTEBP
-
-                BIT     PRTFLG
-                BPL     DODWM
+                BIT     PRTFLG     ; print exit
+                BPL     DODWN
 
                 JSR     STRIMO
-
                 EQUS    "Print done. "
-
                 EQUB    $EA,$20,$05,$AC
 
-.DODWM          JSR     VSTRNG
-
+.DODWN          JSR     VSTRNG
                 EQUB    $03,$0F,$EA
 
 .LA3CF          JSR     closeX
-
                 LDX     GS
                 LDY     GS+1
                 JMP     EDITgs
 
-.CTLLMT         LDY     #$03
+.CTLLMT         LDY     #$03       ; found built in cmd
                 JSR     CTLLDO
 
 .CTLLMX         JSR     SPACEY
-
                 DEY
                 CLC
                 JSR     YADP
-
                 LDA     (ADDR)
                 CMP     CTLCHA
                 BEQ     CTLIN1
@@ -4023,10 +4017,9 @@ STRMEX = STATSI+1
                 JSR     YADP
 
 .CTLIN          LDA     ADDR+1
-                STA     XEFF
-                CMP     #$A3
+                STA     XEFF       ; set nojust(local) by <>
+                CMP     #$A3       ; / CTLIN
                 BCS     CTLIN1
-
                 LDX     ADDR
                 CPX     GS
                 SBC     GS+1
@@ -4035,16 +4028,14 @@ STRMEX = STATSI+1
 .CTLIN1         LDA     (ADDR)
                 CMP     CTLCHA
                 BNE     LINLYX
-
-                LDX     #$00
+                LDX     #$00       ; main control scan
                 LDY     #$02
                 LDA     (ADDR),Y
                 STA     TEMP+1
                 DEY
                 LDA     (ADDR),Y
-.CTLLLP         CMP     LAD53,X
+.CTLLLP         CMP     CMDS,X    ; CMDS
                 BNE     CTLLLL
-
                 LDY     CMDS+1,X
                 CPY     TEMP+1
                 BEQ     CTLLMT
@@ -4087,33 +4078,30 @@ STRMEX = STATSI+1
 .LINLYX         LDA     LINEOT
                 INC     A
                 BNE     NOHDR
-
                 JSR     DOHDR
 
-.NOHDR          LDA     SMATHI
+.NOHDR          LDA     SMATHI     ; SMATHI (LEN)
                 LDY     TINDEN
                 INY
                 SEC
                 BEQ     SBCLEN
-
-                SBC     TINDEN
+                SBC     TINDEN     ; take off temp indent
                 BRA     GOTLEN
 
-.SBCLEN         SBC     SMATHI+1
+.SBCLEN         SBC     SMATHI+1   ; SMATHI+1(INDENT)
 .GOTLEN         STA     JUSLEN
                 LDY     #$00
                 LDX     #$00
-                STZ     SPACES
-                STZ     LASTTAB
+                STZ     SPACES     ; initalise spaces encountered
+                STZ     LASTTAB    ; initalise start of spacing out
 .LINLEN         CPY     #$FA
                 BCS     LENFNE
-
-                JSR     IGNCTL
+                JSR     IGNCTL     ; main char count
 
                 CMP     termin
                 BEQ     LENFNE
 
-                CMP     mark_count
+                CMP     mark_count ; mark_count(TABCHA)
                 BNE     NOTTAB
 
                 TXA
@@ -4141,10 +4129,9 @@ STRMEX = STATSI+1
                 BRA     NOSP2
 
 .NOTAB          PLX
-                LDA     #$20
-.NOTTAB         CMP     #$20
+                LDA     " "
+.NOTTAB         CMP     " " 
                 BNE     NOSP
-
                 STX     LASTSP
                 INC     SPACES
 .NOSP           INX
@@ -4154,66 +4141,53 @@ STRMEX = STATSI+1
 
 .NOTAB2         JSR     IGNCTL
 
-                CMP     #$20
+                CMP     " " 
                 BEQ     LENFNA
 
-                CMP     mark_count
+                CMP     mark_count ; mark_count(TABCHA)
                 BEQ     LENFNA
-
                 CMP     termin
                 BEQ     LENFNA
-
                 LDA     SPACES
                 BEQ     LENFNA
-
                 LDX     LASTSP
                 DEC     SPACES
 .LENFNA         DEX
                 STZ     XEFF
 .LENFNE         INX
-                STX     COUNT
+                STX     COUNT     ; X, Y free
                 BIT     PRTFLG
                 BPL     DODW
-
                 JSR     DOSCRE
-
                 BRA     LINCTL
 
 .DODW           LDA     #$40
-                TSB     PRTFLG
-                LDA     UMATLO
+                TSB     PRTFLG    ; no underline first time
+                LDA     UMATLO    ; UMATLO(UNDERL)
                 PHA
                 JSR     WRITE
-
                 PLA
-                STA     UMATLO
+                STA     UMATLO    ; UMATLO(UNDERL)
                 BIT     UNDRRQ
                 BPL     LINCTL
-
-                LDA     #$40
+                LDA     #$40      ; no do underline
                 TRB     PRTFLG
                 JSR     DOSCRE
-
-                STZ     UMATLO
-.LINCTL         BIT     SMATLO+1
+                STZ     UMATLO    ; UMATLO(UNDERL)
+.LINCTL         BIT     SMATLO+1  ; SMATLO+1(LINFED)
                 BMI     FINSEN
-
-                LDX     UMATHI+1
-.LINSCT         JSR     LFWRCH
-
+                LDX     UMATHI+1  ; UMATHI+1(VSPACE)
+.LINSCT         JSR     LFWRCH    ; ready for next line
                 LDA     LINEOT
                 INC     A
                 BEQ     FINSEN
-
                 DEX
                 BNE     LINSCT
 
-.FINSEN         STZ     SMATLO+1
+.FINSEN         STZ     SMATLO+1  ; back on, for next line : SMATLO+1(LINFED)
                 JSR     SPACEY
-
                 CMP     termin
                 BEQ     NICEDL
-
                 DEY
 .NICEDL         CLC
                 JSR     YADP
@@ -4223,36 +4197,30 @@ STRMEX = STATSI+1
 .SPACEY         LDA     (ADDR),Y
                 INY
                 BEQ     SPACER
-
-                CMP     #$20
+                CMP     " "
                 BEQ     SPACEY
 
 .SPACER         RTS
 
-.IGNCTL         LDA     (ADDR),Y
+.IGNCTL         LDA     (ADDR),Y   ; count routine
                 CMP     CTLCHA
                 BNE     NOCTRL
-
                 INY
                 LDA     (ADDR),Y
-                CMP     #$62
+                CMP     "b"
                 BEQ     WSCTRB
-
-                CMP     #$6F
+                CMP     "o"
                 BEQ     WSCTRO
-
-                CMP     #$72
+                CMP     "r"
                 BEQ     WSCTRR
-
-                CMP     #$65
+                CMP     "e"
                 BNE     NORECG
 
 .WSCTRB         INY
                 LDA     (ADDR),Y
-                CMP     #$62
+                CMP     "b"
                 BEQ     WSCTRL
-
-                CMP     #$75
+                CMP     "u"
                 BNE     NORECF
 
 .WSCTRL         INY
@@ -4260,12 +4228,10 @@ STRMEX = STATSI+1
 
 .WSCTRO         INY
                 LDA     (ADDR),Y
-                CMP     #$6E
+                CMP     "n"
                 BEQ     WSCTON
-
-                CMP     #$63
+                CMP     "c"
                 BNE     NORECF
-
                 INX
 .WSCTON         PHX
                 INY
@@ -4276,14 +4242,11 @@ STRMEX = STATSI+1
 
 .WSCTRR         INY
                 LDA     (ADDR),Y
-                CMP     #$30
+                CMP     " "
                 BCC     NORECF
-
                 CMP     #$3A
                 BCS     NORECF
-
                 JSR     DECCON
-
                 BRA     WSCTRL
 
 .NORECF         DEY
@@ -4292,34 +4255,27 @@ STRMEX = STATSI+1
 .NOCTRL         RTS
 
 .WASCTL         INY
-.CHKCTL         LDA     (ADDR),Y
+.CHKCTL         LDA     (ADDR),Y   ; print routine
                 CMP     CTLCHA
                 BNE     NOCTRL
-
                 INY
                 LDA     (ADDR),Y
-                CMP     #$62
+                CMP     "b"
                 BEQ     WASCTB
-
-                CMP     #$6F
+                CMP     "o"
                 BEQ     WASCTO
-
-                CMP     #$72
+                CMP     "r"
                 BEQ     WASCTR
-
-                CMP     #$65
+                CMP     "e"
                 BNE     NORECG
-
                 INY
                 LDA     (ADDR),Y
-                CMP     #$62
+                CMP     "b"
                 BEQ     WASCTEB
-
-                CMP     #$75
+                CMP     "u"
                 BNE     NORECF
-
-                STZ     UMATLO+1
-                STZ     UMATLO
+                STZ     UMATLO+1    ; UMATLO+1(PUNDRL)
+                STZ     UMATLO      ; UMATLO(UNDERL)
                 BRA     WASCTL
 
 .WASCTEB        STZ     PBOLD
@@ -4328,15 +4284,14 @@ STRMEX = STATSI+1
 
 .WASCTB         INY
                 LDA     (ADDR),Y
-                CMP     #$62
+                CMP     "b"
                 BEQ     WASCTA
-
-                CMP     #$75
+                CMP     "u"
                 BNE     NORECF
 
                 LDA     #$FF
-                STA     UMATLO
-                STA     UMATLO+1
+                STA     UMATLO     ; UMATLO(UNDERL)
+                STA     UMATLO+1   ; UMATLO+1(PUNDRL)
                 STA     UNDRRQ
                 BRA     WASCTL
 
@@ -4348,137 +4303,122 @@ STRMEX = STATSI+1
 
 .WASCTO         INY
                 LDA     (ADDR),Y
-                CMP     #$6E
+                CMP     "n"
                 BEQ     WASCON
-
-                CMP     #$63
+                CMP     "c"
                 BNE     NORECF
-
                 INX
 .WASCON         PHX
                 INY
                 JSR     GETNO
-
                 LDA     #$01
                 JSR     OSWRCH
-
                 TXA
                 JSR     OSWRCH
-
                 PLX
                 BRA     CHKCTL
 
 .WASCTR         INY
                 LDA     (ADDR),Y
-                CMP     #$30
+                CMP     "0"
                 BCC     NORECF
-
                 CMP     #$3A
                 BCS     NORECF
-
                 JSR     DECCON
-
                 PHX
                 LDX     TEMP
-.OUTCON         LDA     scratc+$0A,X
-                JSR     FMWRCH
-
+.OUTCON         LDA     scratc+$0A,X  ; scratc+$0A(BUFF)
+                JSR     FMWRCH     ; ul!!
                 DEX
                 BPL     OUTCON
-
                 PLX
                 JMP     WASCTL
 
 .CTLLDO         LDA     #$FF
-                JMP     (LAD55,X)
+                JMP     (LAD55,X)  ; LAD55(CMDS+2)
 .ROUTAF         JSR     GETNO
-
                 AND     #$0F
                 ASL     A
                 TAX
-                LDA     LINBUFF+1,X
+                LDA     LINBUFF+1,X  ; LINBUFF+1(NOREGS+1)
                 AND     #$0F
-                STA     LINBUFF+1,X
-                INY
+                STA     LINBUFF+1,X  ; LINBUFF+1(NOREGS+1)
+                INY                  ; skip some delimiter
                 PHX
                 JSR     GETNO
-
                 PLX
                 ASL     A
                 ASL     A
                 ASL     A
                 ASL     A
-                ORA     LINBUFF+1,X
-                STA     LINBUFF+1,X
+                ORA     LINBUFF+1,X  ; LINBUFF+1(NOREGS+1)
+                STA     LINBUFF+1,X  ; LINBUFF+1(NOREGS+1)
                 RTS
 
 .ROTAN          JSR     GETNO
-
                 AND     #$0F
                 ASL     A
                 PHA
                 LDA     (ADDR),Y
-                INY
+                INY                  ; skip delimiter
                 PHA
                 JSR     GETNO
 
                 PLA
-                CMP     #$2B
+                CMP     "+"
                 BEQ     ADDREG
-
-                CMP     #$2D
+                CMP     "-"
                 BEQ     SUBREG
-
-                CMP     #$3D
+                CMP     "="
                 BEQ     MOVREG
 
                 TXA
                 PLX
-                STA     LINBUFF,X
-                LDA     LINBUFF+1,X
+                STA     LINBUFF,X    ; LINBUFF(NOREGS)
+                LDA     LINBUFF+1,X  ; LINBUFF+1(NOREGS+1)
                 AND     #$F0
-                STA     LINBUFF+1,X
+                STA     LINBUFF+1,X  ; LINBUFF+1(NOREGS+1)
                 RTS
 
 .ADDREG         CLC
-                STX     scratc+$0A
+                STX     scratc+$0A    ; scratc+$0A(BUFF)
                 PLX
-                LDA     LINBUFF,X
-                ADC     scratc+$0A
-                STA     LINBUFF,X
-                LDA     LINBUFF+1,X
+                LDA     LINBUFF,X     ; LINBUFF(NOREGS)
+                ADC     scratc+$0A    ; scatc+$0A(BUFF)
+                STA     LINBUFF,X     ; LINBUFF(NOREGS)
+                LDA     LINBUFF+1,X   ; LINBUFF+1(NOREGS+1)
                 ADC     #$00
-                STA     LINBUFF+1,X
+                STA     LINBUFF+1,X   ; LINBUFF+1(NOREGS+1)
                 RTS
 
-.SUBREG         STX     scratc+$0A
+.SUBREG         STX     scratc+$0A    ; scratc+$0A(BUFF)
                 PLX
-                LDA     LINBUFF,X
-                SBC     scratc+$0A
-                STA     LINBUFF,X
-                LDA     LINBUFF+1,X
+                LDA     LINBUFF,X     ; LINBUFF(NOREGS)
+                SBC     scratc+$0A    ; scratc+$0A(BUFF)
+                STA     LINBUFF,X     ; LINBUFF(NOREGS)
+                LDA     LINBUFF+1,X   ; LINBUFF+1(NOREGS+1)
                 SBC     #$00
-                STA     LINBUFF+1,X
+                STA     LINBUFF+1,X   ; LINBUFF+1(NOREGS+1)
                 RTS
 
 .MOVREG         TXA
                 AND     #$0F
                 ASL     A
                 TAX
-                LDA     LINBUFF+1,X
+                LDA     LINBUFF+1,X   ; LINBUFF+1(NOREGS+1)
                 AND     #$0F
-                STA     scratc+$0A
-                LDA     LINBUFF,X
+                STA     scratc+$0A    ; scratc+$0A(BUFF)
+                LDA     LINBUFF,X     ; LINBUFF(NOREGS)
                 PLX
-                STA     LINBUFF,X
-                LDA     LINBUFF+1,X
+                STA     LINBUFF,X     ; LINBUFF(NOREGS)
+                LDA     LINBUFF+1,X   ; LINBUFF+1(NOREGS+1)
                 AND     #$F0
-                ORA     scratc+$0A
-                STA     LINBUFF+1,X
+                ORA     scratc+$0A    ; scratc+$0A(BUFF)
+                STA     LINBUFF+1,X   ; LINBUFF+1(NOREGS+1)
                 RTS
 
-.ROUTBL         STA     UMATHI
-                STA     BOLDRQ
+.ROUTBL         STA     UMATHI        ; UMATHI(BOLD)
+                STA     BOLDRQ        
                 RTS
 
                 LDA     (ADDR),Y
@@ -4487,13 +4427,13 @@ STRMEX = STATSI+1
                 RTS
 
                 STA     CENTRE
-                STZ     SMATLO
+                STZ     SMATLO        ; can't have both : SMATLO(RFLUSH)
                 RTS
 
-                LDA     ADDR
+.ROUTCH         LDA     ADDR
                 STA     TEMP
                 LDA     ADDR+1
-                STA     TEMP+1
+                STA     TEMP+1      ; move filename pointer
                 LDA     tstart
                 STA     ADDR
                 LDA     tstart+1
@@ -4501,118 +4441,108 @@ STRMEX = STATSI+1
                 LDA     TMAX
                 LDX     TMAX+1
                 JSR     paslnm
-
                 JSR     pasGO
-
                 STX     GS
                 STY     GS+1
                 LDX     #$FF
                 TXS
                 JMP     CHAINB
 
-.MACCHK         STA     TEMP
-                LDX     #$FE
+.MACCHK         STA     TEMP        ; check for macro: A-lo, TEMP+1-hi
+                LDX     #$FE        ; -2
 .MACCHL         INX
                 INX
-                CPX     #$D0
+                CPX     #$D0        ; (MAXMAC)
                 BCS     MACCHX
-
                 LDA     MACLST,X
-                STA     scratc+$0A
+                STA     scratc+$0A  ; scratc+$0A(BUFF)
                 LDA     MACLST+1,X
-                STA     scratc+$0B
+                STA     scratc+$0B  ; scratc+$0B(BUFF+1)
                 BEQ     MACCHZ
-
                 PHY
                 LDY     #$03
-.MACSPC         LDA     (scratc+$0A),Y
+.MACSPC         LDA     (scratc+$0A),Y  ; scratc+$0A(BUFF)
                 INY
-                CMP     #$20
+                CMP     " "
                 BEQ     MACSPC
-
-                STA     scratc+$0C
-                LDA     (scratc+$0A),Y
+                STA     scratc+$0C    ; scratc+$0C(BUFF+2)
+                LDA     (scratc+$0A),Y  ; scratc+$0A(BUFF)
                 PLY
                 CMP     TEMP+1
                 BNE     MACCHL
-
-                LDA     scratc+$0C
+                LDA     scratc+$0C    ; scratc+$0C(BUFF+2)
                 CMP     TEMP
                 BNE     MACCHL
+                RTS                   ; found CS,EQ
 
-                RTS
-
-.MACCHX         CLC
+.MACCHX         CLC                   ; not found, no space CC,NE
                 TXA
-.MACCHZ         RTS
+.MACCHZ         RTS                   ; not found, at space CC,EQ
 
 .DMEXIT         DEY
                 RTS
 
 .ROUTDM         JSR     SPACEY
-
                 CMP     termin
                 BEQ     DMEXIT
-
                 CMP     CTLCHA
                 BEQ     DMEXIT
-
                 STA     TEMP+1
                 LDA     (ADDR),Y
                 CMP     termin
                 BEQ     DMEXIT
-
                 JSR     MACCHK
-
                 BNE     DMEXIT
-
                 LDA     ADDR
                 STA     MACLST,X
                 LDA     ADDR+1
                 STA     MACLST+1,X
                 BRA     SKIPEN
 
-                LDA     #$02
-                STA     UMATHI+1
+.ROUTDS         LDA     #$02
+                STA     UMATHI+1    ; UMATHI+1(VSPACE)
                 RTS
 
-                LDA     ADDR
+.ROUTOF         LDA     ADDR
                 STA     PAGEOF
                 LDA     ADDR+1
                 STA     PAGEOF+1
                 BRA     SKIPEN
 
-                LDA     ADDR
+.ROUTOH         LDA     ADDR
                 STA     PAGEOH
                 LDA     ADDR+1
                 STA     PAGEOH+1
                 BRA     SKIPEN
 
-                LDA     ADDR
+.ROUTFO         LDA     ADDR
                 STA     PAGEOF
                 LDA     ADDR+1
                 STA     PAGEOF+1
-                LDA     ADDR
+
+.ROUTEF         LDA     ADDR
                 STA     PAGEEF
                 LDA     ADDR+1
                 STA     PAGEEF+1
-                BRA     SKIPEN
 
-                LDA     ADDR
+.ROUTIG         BRA     SKIPEN
+
+.ROUTHE         LDA     ADDR
                 STA     PAGEOH
                 LDA     ADDR+1
                 STA     PAGEOH+1
-                LDA     ADDR
+
+.ROUTEH         LDA     ADDR
                 STA     PAGEEH
                 LDA     ADDR+1
                 STA     PAGEEH+1
+
 .SKIPEN         CLC
                 JSR     YADP
 
 .SKIPEM         LDA     (ADDR)
                 INC     ADDR
                 BNE     SKIPEK
-
                 PHA
                 INC     ADDR+1
                 LDA     ADDR
@@ -4620,273 +4550,233 @@ STRMEX = STATSI+1
                 LDA     ADDR+1
                 SBC     GS+1
                 BCS     SKIPEX
-
                 PLA
+
 .SKIPEK         CMP     CTLCHA
                 BNE     SKIPEM
-
                 LDA     (ADDR)
-                CMP     #$65
+                CMP     "e"
                 BNE     SKIPEM
-
                 LDY     #$01
                 LDA     (ADDR),Y
-                CMP     #$6E
+                CMP     "n"
                 BNE     SKIPEM
-
                 INY
+
 .SKIPEX         RTS
 
-                TSX
+.ROUTEN         TSX
                 CPX     #$FD
-                BCS     SKIPEX
-
+                BCS     SKIPEX     ; check for possible to do it
                 PLA
                 PLA
-                RTS
+                RTS                ; return a macro level
 
 .ROUTEP         JSR     ROUTEBP
-
-                LDA     LINBUFF
+                LDA     LINBUFF    ; LINEBUFF (PAGE)
                 LSR     A
                 BCS     ROUTEP
-
                 RTS
 
-                LDA     PWTFLG
+.ROUTFF         LDA     PWTFLG
                 BMI     NOWAIT
-
                 LDA     PRTFLG
                 BPL     PRTWAT
-
                 JSR     INKEY
 
 .NOWAIT         LDA     #$0C
                 JMP     OSWRCH
 
 .PRTWAT         JSR     NOWAIT
-
                 JMP     INKEY
 
-                PHY
+.ROUTIC         PHY
                 JSR     closeX
-
                 PLY
                 RTS
 
-                LDX     SMATHI+1
+.ROUTIN         LDX     SMATHI+1    ; SMATHI+1(INDENT)
                 JSR     MODNO
-
-                STX     SMATHI+1
+                STX     SMATHI+1    ; SMATHI+1(INDENT)
                 RTS
 
-                CLC
+.ROUTIO         CLC
                 JSR     YADP
-
                 JSR     closeX
-
                 LDX     ADDR
                 LDY     ADDR+1
                 LDA     #$80
                 JSR     OSFIND
-
                 STA     INDEXH
                 LDY     #$00
+
 .ROUTCO         LDA     termin
                 BRA     SKIPL1
 
 .SKIPLP         INY
                 BNE     SKIPL1
-
                 INC     ADDR+1
 .SKIPL1         CMP     (ADDR),Y
                 BNE     SKIPLP
-
                 RTS
 
-                STA     LINE
+.ROUTIX         STA     LINE      ; LINE(DOINDX)
                 CLC
                 JSR     YADP
-
                 LDA     LINEOT
                 PHA
                 LDA     #$FD
                 STA     LINEOT
                 JSR     CTLIN
-
                 PLA
                 STA     LINEOT
-                STZ     LINE
+                STZ     LINE       ; LINE(DOINDX)
                 RTS
 
-                STZ     FILL
+.ROUTJU         STZ     FILL
                 RTS
 
-                LDX     SMATHI
+.ROUTLL         LDX     SMATHI
                 JSR     MODNO
-
-                STA     SMATHI
+                STA     SMATHI     ; SMATHI(LEN)
                 RTS
 
-                LDX     UMATHI+1
+.ROUTLS         LDX     UMATHI+1   ; UMATHI+1(VSPACE)
                 JSR     MODNO
-
-                STX     UMATHI+1
+                STX     UMATHI+1   ; UMATHI+1(CVSPACE)
                 RTS
 
-                JSR     GETNO
-
+.ROUTLV         JSR     GETNO
                 CMP     LINEOT
                 BEQ     OKAYLV
-
                 BCC     OKAYLV
-
                 PHA
                 JSR     ROUTEBP
-
                 PLA
+
 .OKAYLV         JMP     ALINES
-
-                JSR     GETNO
-
+.ROUTNE         JSR     GETNO
                 CMP     LINEOT
                 BEQ     OKAY
-
                 BCC     OKAY
 
 .ROUTEBP        LDA     LINEOT
                 BRA     ALINES
+                
+.ROUTNJ         STA     FILL
 
-                STA     FILL
 .OKAY           RTS
 
-                STA     SMATLO+1
+.ROUTNN         STA     SMATLO+1    ; SMATLO+1(LINFED)
                 RTS
 
 .ROUTOP         JSR     ROUTEBP
-
-                LDA     LINBUFF
+                LDA     LINBUFF     ; LINBUFF(PAGE)
                 LSR     A
                 BCC     ROUTOP
-
                 RTS
 
-                CLC
+.ROUTOS         CLC
                 JSR     YADP
-
                 LDX     ADDR
                 LDY     ADDR+1
                 JSR     OSCLI
-
                 LDY     #$00
                 JMP     ROUTCO
 
-                LDX     LINEDW
+.ROUTPL         LDX     LINEDW
                 JSR     MODNO
-
                 TXA
                 BEQ     WZERO
-
                 STA     LINEDW
                 LDX     LINEOT
                 INX
                 BEQ     WZERO
-
                 STA     LINEOT
 .WZERO          RTS
 
-                LDX     OFFSET
+.ROUTPO         LDX     OFFSET
                 JSR     MODNO
-
                 STA     OFFSET
                 RTS
 
-                STA     SMATLO
-                STZ     CENTRE
+.ROUTRF         STA     SMATLO     ; SMATLO(RFLUSH)
+                STZ     CENTRE     ; can't have both
                 RTS
 
-                JSR     GETNO
+.ROUTSP         JSR     GETNO
 
 .ALINES         TAX
                 BEQ     ALINEX
-
                 PHY
                 CMP     #$FF
                 BNE     ALINEA
-
                 JSR     DOHDR
-
                 LDX     LINEOT
-.ALINEA         LDA     LINEOT
+                
+.ALINEA         LDA     LINEOT     ; TODO original has this as ALINEL
                 INC     A
                 BNE     ALINET
-
                 PHX
                 JSR     DOHDR
-
                 PLX
-.ALINET         LDA     #$0D
+                
+.ALINET         LDA     cr         ; ++++
                 JSR     OSWRCH
-
                 JSR     LFWRCH
-
                 DEX
                 BNE     ALINEA
-
                 PLY
+                
 .ALINEX         RTS
 
-                LDA     #$01
-                STA     UMATHI+1
+.ROUTSS         LDA     #$01
+                STA     UMATHI+1   ; UMATHI+1(VSPACE)
                 RTS
 
-                STZ     LASTTAB
-.SETTAB         JSR     GETNO
+.ROUTTA         STZ     LASTTAB
 
+.SETTAB         JSR     GETNO
                 LDX     LASTTAB
                 STA     TABLST,X
                 STZ     TABLST+1,X
                 INC     LASTTAB
                 JSR     SPACEY
-
-                CMP     #$2C
+                CMP     ","
                 BEQ     SETTAB
-
                 DEY
                 RTS
 
-                LDA     (ADDR),Y
-                STA     mark_count
+.ROUTTC         LDA     (ADDR),Y
+                STA     mark_count   ; mark_count(TABCHA)
                 INY
                 RTS
 
-                LDX     TINDEN
+.ROUTTI         LDX     TINDEN
                 CPX     #$FF
                 BNE     ROUSTI
-
-                LDX     SMATHI+1
+                LDX     SMATHI+1     ; if no temp indent then use INDENT as base.
+                                     ; SMATHI+1(INDENT)
 .ROUSTI         JSR     MODNO
-
                 STX     TINDEN
                 RTS
 
-                LDA     (ADDR),Y
+.ROUTTR         LDA     (ADDR),Y
                 CMP     termin
                 BEQ     SETTRX
-
                 TAX
                 INY
                 LDA     (ADDR),Y
                 DEY
                 CMP     termin
                 BEQ     SETTRX
+                INY
+                INY
+                STA     stracc,X    ; stracc(TRNLST)
 
-                INY
-                INY
-                STA     stracc,X
 .SETTRX         RTS
 
-                STA     UMATLO
+.ROUTUL         STA     UMATLO
                 STA     UNDRRQ
                 RTS
 
@@ -4894,57 +4784,48 @@ STRMEX = STATSI+1
                 ADC     ADDR
                 STA     ADDR
                 BCC     ENDADD
-
                 INC     ADDR+1
 .ENDADD         RTS
 
 .MODNO          JSR     SPACEY
-
-                CMP     #$2D
+                CMP     " "
                 BEQ     SUBNO
-
-                CMP     #$2B
+                CMP     "+"
                 BEQ     ADDNO
-
                 DEY
                 LDX     #$00
+                
 .ADDNO          PHX
                 JSR     GETNO
-
                 PLX
                 CLC
                 STX     TEMP
                 ADC     TEMP
                 BCC     ADDNOX
-
                 LDA     #$00
+
 .ADDNOX         TAX
                 RTS
 
 .SUBNO          PHX
                 JSR     GETNO
-
                 STA     TEMP
                 PLA
                 SEC
                 SBC     TEMP
                 BCS     ADDNOX
-
                 LDA     #$00
                 TAX
                 RTS
 
 .GETNO          LDX     #$00
                 JSR     SPACEY
-
                 DEY
 .NUMLOP         LDA     (ADDR),Y
-                CMP     #$30
+                CMP     "9"
                 BCC     ENDNO
-
                 CMP     #$3A
-                BCS     ENDNUM
-
+                BCS     ENDNUM     ; not a decimal digit
                 AND     #$0F
                 PHA
                 TXA
@@ -4969,21 +4850,19 @@ STRMEX = STATSI+1
 
 .DOHDR          LDX     PAGEEH
                 LDY     PAGEEH+1
-                LDA     LINBUFF
+                LDA     LINBUFF    ; LINBUFF(PAGE)
                 LSR     A
                 BCC     DOHDR1
-
                 LDX     PAGEOH
                 LDY     PAGEOH+1
 .DOHDR1         DEC     LINEOT
                 JSR     MACRO
-
                 LDA     LINEDW
                 STA     LINEOT
                 LDA     #$01
                 STA     LINENO
                 LDA     #$0F
-                TRB     LINENO+1
+                TRB     LINENO+1   ; leave format alone!
                 RTS
 
 .LA96C          LDA     GE
@@ -4993,7 +4872,7 @@ STRMEX = STATSI+1
                 RTS
 
 .rstPrtDes      LDA     #$05
-                LDX     #$00
+                LDX     #$00      ; just for jes's code, set and reset printer type
                 JSR     OSBYTE
 
                 JSR     OSBYTE
@@ -5007,79 +4886,77 @@ STRMEX = STATSI+1
                 PHA
                 LDA     CTLCHA
                 PHA
-                LDA     SMATHI
+                LDA     SMATHI       ; SMATHI(LEN)
                 PHA
-                LDA     SMATHI+1
+                LDA     SMATHI+1     ; SMATHI+1(INDENT)
                 PHA
                 LDA     TINDEN
                 PHA
-                LDA     UMATHI
+                LDA     UMATHI       ; UMATHI(BOLD)
                 PHA
                 LDA     PBOLD
                 PHA
                 LDA     BOLDRQ
                 PHA
-                LDA     UMATLO
+                LDA     UMATLO       ; UMATLO(UNDERL)
                 PHA
-                LDA     UMATLO+1
+                LDA     UMATLO+1     ; UMATLO+1(PUNDRL)
                 PHA
                 LDA     UNDRRQ
                 PHA
                 LDA     FILL
                 PHA
-                LDA     UMATHI+1
+                LDA     UMATHI+1     ; UMATHI+1(VSPACE)
                 PHA
                 LDA     CENTRE
                 PHA
-                LDA     SMATLO
+                LDA     SMATLO       ; SMATLO(RFLUSH)
                 PHA
-                LDA     SMATLO+1
+                LDA     SMATLO+1     ; SMATLO+1(LINFED)
                 PHA
-                STZ     SMATLO+1
+                STZ     SMATLO+1     ; SMATLO+1(LINFED)
                 STZ     FILL
                 STZ     PBOLD
-                STZ     UMATLO+1
-                STZ     SMATHI+1
+                STZ     UMATLO+1     ; UMATLO+1(PUNDRL)
+                STZ     SMATHI+1     ; SMATHI+1(INDENT)
                 LDA     #$01
-                STA     UMATHI+1
+                STA     UMATHI+1     ; UMATHI+1(VSPACE)
                 STX     ADDR
                 STY     ADDR+1
                 LDA     (ADDR)
                 STA     CTLCHA
                 LDY     #$03
                 CLC
-                JSR     YADP
-
+                JSR     YADP         ; skip definition
                 JSR     FINE
-
                 PLA
-                STA     SMATLO+1
+                STA     SMATLO+1     ; SMATLO+1(LINFED)
                 PLA
-                STA     SMATLO
+                STA     SMATLO       ; SMATLO(RFLUSH)
                 PLA
                 STA     CENTRE
                 PLA
-                STA     UMATHI+1
+                STA     UMATHI+1     ; UMATHI+1(VSPACE)
                 PLA
                 STA     FILL
                 PLA
                 STA     UNDRRQ
                 PLA
-                STA     UMATLO+1
+                STA     UMATLO+1     ; UMATLO+1(PUNDRL)
                 PLA
-                STA     UMATLO
+                STA     UMATLO       ; UMATLO(UNDERL)
                 PLA
                 STA     BOLDRQ
                 PLA
                 STA     PBOLD
                 PLA
-                STA     UMATHI
+                STA     UMATHI       ; UMATHI(BOLD)
                 PLA
                 STA     TINDEN
                 PLA
-                STA     SMATHI+1
+                STA     SMATHI+1     ; SMATHI+1(INDENT)
                 PLA
-                STA     SMATHI
+                STA     SMATHI       ; SMATHI(LEN)
                 PLA
                 STA     CTLCHA
                 PLA
@@ -5089,36 +4966,34 @@ STRMEX = STATSI+1
                 RTS
 
 .VDUBIT         TAY
-                LDA     stracc,Y
+                LDA     stracc,Y     ; stracc(TRNLST)
                 STA     scratc
                 JSR     XYscra
-
                 LDA     #$0A
                 JMP     OSWORD
 
-.DOVDU          BIT     UMATHI
+.DOVDU          BIT     UMATHI       ; UMATHI(BOLD)
                 BPL     VDUNBL
-
+                                     ; bold character
                 PHY
                 PHX
                 JSR     VDUBIT
-
                 LDX     #$07
+
 .VDUBLD         LDA     scratc+1,X
                 LSR     A
                 ORA     scratc+1,X
                 STA     scratc+1,X
                 DEX
                 BPL     VDUBLD
-
-                BIT     UMATLO
+                BIT     UMATLO       ; UMATLO(UNDERL)
                 BPL     VDUDON
-
+                                     ; both bold and underline
                 BRA     VDUUND
 
-.VDUNBL         BIT     UMATLO
+.VDUNBL         BIT     UMATLO      ; UMATLO(UNDERL)
                 BPL     WRCHA
-
+                                    ; underline character
                 PHY
                 PHX
                 JSR     VDUBIT
@@ -5135,15 +5010,13 @@ STRMEX = STATSI+1
                 EQUB    $17,$20,$EA
 
 .LAA4D          LDX     #$01
+
 .VDUPRG         LDA     scratc,X
                 JSR     OSWRCH
-
                 INX
                 CPX     #$09
                 BNE     VDUPRG
-
                 JSR     VSTRNG
-
                 EQUB    $20,$17,$20,$00,$00,$00,$00,$00
                 EQUB    $00,$00,$00,$EA
 
@@ -5152,13 +5025,12 @@ STRMEX = STATSI+1
                 RTS
 
 .ESCAP          JSR     ackesc
-
-                JMP     DODWM
+                JMP     DODWN
 
 .FMWRCH         BIT     ESCFLG
-                BMI     ESCAP
-
-                BIT     LINE
+                BMI     ESCAP     ; must not go via SENTRY,
+                                  ; because of marked mode (SWOPCH)
+                BIT     LINE      ; LINE(DOINDX)
                 BMI     DOINDE
 
                 CMP     termin
@@ -5166,14 +5038,13 @@ STRMEX = STATSI+1
 
                 BIT     PRTFLG
                 BMI     DOVDU
-
                 BVS     NOULA
 
-                LDA     #$20
+                LDA     " "
                 BIT     UMATLO
                 BPL     NOULA
+                LDA     "_"
 
-                LDA     #$5F
 .NOULA          PHA
                 LDA     #$20
                 BIT     PRTFLG
@@ -5182,16 +5053,15 @@ STRMEX = STATSI+1
                 BIT     UMATHI
                 BMI     NOBBLE
 
-                LDA     #$20
+                LDA     " "
                 JSR     OSWRCH
-
                 PLA
                 RTS
 
 .NOBBLE         PLA
 .WRCHA          PHY
                 TAY
-                LDA     stracc,Y
+                LDA     stracc,Y    ; stracc(TRNLST)
                 PLY
 .wrch           JMP     (WRCHV)
 
@@ -5200,48 +5070,43 @@ STRMEX = STATSI+1
 
 .DOINDE         PHY
                 TAY
-                LDA     stracc,Y
+                LDA     stracc,Y    ; stracc(TRNLST)
                 LDY     INDEXH
                 BEQ     DOINDF
-
                 JSR     OSBPUT
 
 .DOINDF         PLY
                 RTS
 
-.LFWRCH         BIT     LINE
+.LFWRCH         BIT     LINE        ; LINE(doindX)
                 BMI     writeX
 
-                LDA     #$0A
+                LDA     lf          ; write a real line feed
                 INC     LINENO
                 BNE     fmwrca
-
                 INC     LINENO+1
+                j
 .fmwrca         DEC     LINEOT
                 BNE     wrch
-
                 JSR     OSWRCH
-
                 PHX
                 PHY
                 LDX     PAGEEF
                 LDY     PAGEEF+1
-                LDA     LINBUFF
+                LDA     LINBUFF     ; LINBUFF (page)
                 LSR     A
                 BCC     doftr1
-
                 LDX     PAGEOF
                 LDY     PAGEOF+1
+
 .doftr1         DEC     LINEOT
                 DEC     LINEOT
                 JSR     MACRO
-
                 LDA     #$FF
                 STA     LINEOT
-                INC     LINBUFF
+                INC     LINBUFF     ; LINBUFF(PAGE)
                 BNE     HI
-
-                INC     LINBUFF+1
+                INC     LINBUFF+1   ; LINBUFF+1(PAGE+1)
 .HI             PLY
                 PLX
 .writeX         RTS
@@ -5251,27 +5116,22 @@ STRMEX = STATSI+1
                 LDA     UMATHI
                 PHA
                 JSR     DOSCRE
-
                 PLA
                 STA     UMATHI
                 BIT     BOLDRQ
                 BPL     writeX
-
                 LDA     #$20
                 TRB     PRTFLG
                 JSR     DOSCRE
-
                 LDA     #$20
                 TSB     PRTFLG
                 RTS
 
 .DOSCRE         LDA     OFFSET
                 JSR     SCMVTO
-
                 STZ     DIFF
                 LDA     XEFF
                 BNE     SCREEA
-
                 SEC
                 LDA     JUSLEN
                 SBC     COUNT
@@ -5279,22 +5139,18 @@ STRMEX = STATSI+1
 .SCREEA         LDA     TINDEN
                 CMP     #$FF
                 BNE     SCREEB
-
-                LDA     SMATHI+1
+                LDA     SMATHI+1   ; SMATHI+1(INDENT)
 .SCREEB         JSR     SCMVTO
-
                 LDA     CENTRE
                 BPL     SCREED
-
                 SEC
                 LDA     JUSLEN
                 INC     A
                 SBC     COUNT
                 JSR     MOVE
 
-.SCREED         BIT     SMATLO
+.SCREED         BIT     SMATLO     ; SMATLO(RFLUSH)
                 BPL     SCREEQ
-
                 SEC
                 LDA     JUSLEN
                 ADC     #$01
@@ -5305,51 +5161,44 @@ STRMEX = STATSI+1
                 LDX     #$00
                 LDA     SPACES
                 BEQ     SCREEE
-
                 LSR     A
-                STA     NUMMAR
+                STA     NUMMAR       ; NUMMAR(L)
                 LDA     #$00
                 BIT     FILL
                 BMI     SENA
-
                 LDA     DIFF
 .SENA           LDX     #$01
 .DODIV          CMP     SPACES
                 BCC     DONDIV
-
                 INX
                 SBC     SPACES
                 BCS     DODIV
 
-.DONDIV         STX     MARKSB
+.DONDIV         STX     MARKSB       ; MARKSB(Q)
                 STA     DIFF
                 LDX     #$00
 .SCREEE         JSR     CHKCTL
 
-                CMP     termin
+                CMP     termin       ; ++++
                 BEQ     SCREEG
 
-                CMP     mark_count
+                CMP     mark_count   ; mark_count(TABCHA)
                 BNE     SCREES
-
                 TXA
                 LDX     #$FF
 .SCRTAB         INX
                 PHA
                 LDA     TABLST,X
                 BEQ     SCRNTB
-
                 PLA
                 CMP     TABLST,X
                 BCS     SCRTAB
-
                 SEC
                 SBC     TABLST,X
                 EOR     #$FF
                 INC     A
                 PHX
                 JSR     SCMVTO
-
                 PLX
                 LDA     TABLST,X
                 TAX
@@ -5357,36 +5206,31 @@ STRMEX = STATSI+1
                 BRA     NOUL
 
 .SCRNTB         PLX
-                LDA     #$20
-.SCREES         CMP     #$20
+                LDA     " "
+.SCREES         CMP     " "
                 BNE     SCREEF
-
                 CPX     LASTTAB
                 BCC     SCREEF
-
                 PHX
-                LDX     MARKSB
+                LDX     MARKSB     ; MARKSB(Q)
 .SCRJUS         DEX
                 BEQ     NOMOV
-
-                LDA     #$20
+                LDA     " "
                 JSR     FMWRCH
-
                 BRA     SCRJUS
 
 .NOMOV          PLX
                 SEC
-                LDA     NUMMAR
+                LDA     NUMMAR     ; NUMMAR(L)
                 SBC     DIFF
-                STA     NUMMAR
+                STA     NUMMAR     ; NUMMAR(L)
                 BCS     ENDJUS
-
                 ADC     SPACES
-                STA     NUMMAR
-                LDA     #$20
+                STA     NUMMAR     ; NUMMAR(L)
+                LDA     " "
                 JSR     FMWRCH
 
-.ENDJUS         LDA     #$20
+.ENDJUS         LDA     " "
 .SCREEF         JSR     FMWRCH
 
 .NOUL           INY
@@ -5394,34 +5238,29 @@ STRMEX = STATSI+1
                 CPX     COUNT
                 BCC     SCREEE
 
-                LDA     termin
+                LDA     termin     ; ++++
 .SCREEG         JMP     FMWRCH
 
 .closeX         LDY     INDEXH
                 BEQ     closexrts
-
                 STZ     INDEXH
                 LDA     #$00
-                JSR     OSFIND
+                JSR     OSFIND     ; close index file
 
 .closexrts      RTS
 
 .SCMVTO         ASL     A
 .MOVE           LSR     A
                 BEQ     MOVEX
-
                 TAX
                 LDA     #$09
                 BIT     PRTFLG
                 BMI     MLOOP
-
-                LDA     #$20
-.MLOOP          BIT     LINE
+                LDA     " "
+.MLOOP          BIT     LINE       ; LINE(DOINDX)
                 BPL     MLOOPA
-
-                LDA     #$20
+                LDA     " "
                 JSR     DOINDE
-
                 BRA     MLOOPB
 
 .MLOOPA         JSR     OSWRCH
@@ -5432,39 +5271,34 @@ STRMEX = STATSI+1
 .MOVEX          RTS
 
 .INKEYS         JSR     STRIMO
-
                 EQUS    "Press SHIFT to continue"
-
                 EQUB    $EA
 
 .INKEY          PHX
                 PHY
-.INKEYL         JSR     escTST
 
+.INKEYL         JSR     escTST
                 LDX     #$FF
                 LDY     #$FF
                 LDA     #$81
                 JSR     OSBYTE
-
                 CPX     #$FF
                 BNE     INKEYL
-
                 LDA     #$0F
                 LDX     #$FF
                 JSR     OSBYTE
-
                 PLY
                 PLX
                 RTS
 
-.DECCON         PHX
+.DECCON         PHX                   ; reg in A to print buff. INX by # chars
                 PHY
                 AND     #$0F
                 ASL     A
                 TAX
-                LDA     LINBUFF,X
+                LDA     LINBUFF,X     ; LINBUFF(NOREGS)
                 STA     TEMP
-                LDA     LINBUFF+1,X
+                LDA     LINBUFF+1,X   ; LINBUFF+1(NOREGS+1)
                 TAX
                 AND     #$0F
                 STA     TEMP+1
@@ -5477,10 +5311,8 @@ STRMEX = STATSI+1
                 LSR     A
                 PLP
                 BNE     MMLTST
-
                 CMP     #$08
                 BCC     DECANY
-
                 LDA     #$00
                 BRA     DECANY
 
@@ -5489,14 +5321,14 @@ STRMEX = STATSI+1
 
 .DECANY         PHA
                 LDX     #$04
-                LDA     #$30
-                STA     scratc+$0F
+                LDA     "0"
+                STA     BUFF+5
                 STA     BUFF+6
                 STA     BUFF+7
-.NUMLAP         LDA     #$30
-                STA     scratc+$0A,X
+.NUMLAP         LDA     "0"
+                STA     BUFF,X
                 SEC
-.NUMLP          LDA     TEMP
+.NUMLP          LDA     TEMP         ; TODO HERE 
                 SBC     LBBF7,X
                 TAY
                 LDA     TEMP+1
@@ -5619,13 +5451,9 @@ STRMEX = STATSI+1
 .LAD2C          EQUB    $00,$00,$00,$00,$00,$00,$00,$00
                 EQUB    $00,$01,$01,$03,$03
 
-.LAD39          EQUS    "I"
+.LAD39          EQUS    "I IVV IXX XLL XCC CDD DMM a"
 
-.CHARS+1        EQUS    " IVV IXX XLL XCC CDD DMM a"
-
-.LAD53          EQUS    "af"
-
-.CMDS+1         EQUS    "f"
+.CMDS           EQUS    "af"    
 
 .LAD55          EQUW    $A604
 
@@ -6425,7 +6253,7 @@ STRMEX = STATSI+1
                 JSR     OSBYTE
 
                 STX     OSHWM
-                STY     PAJE+1
+                STY     PAJEd
                 INC     A
                 JSR     OSBYTE
 
@@ -6435,7 +6263,7 @@ STRMEX = STATSI+1
                 LDA     OSHWM
                 ADC     #$01
                 STA     tstart
-                LDA     PAJE+1
+                LDA     PAJEd
                 ADC     #$00
                 STA     tstart+1
                 LDA     HIMEM
@@ -6788,7 +6616,7 @@ STRMEX = STATSI+1
                 JSR     EDITmd
 
 .OLDTEXT        LDA     oldsta+3
-                CMP     PAJE+1
+                CMP     PAJEd
                 BCC     NOOLD
 
                 CMP     HYMEM+1
@@ -6798,7 +6626,7 @@ STRMEX = STATSI+1
                 BCC     NOOLD
 
                 LDA     oldsta+1
-                CMP     PAJE+1
+                CMP     PAJEd
                 BCC     NOOLD
 
                 LDA     oldsta
@@ -8205,8 +8033,7 @@ STRMEX = STATSI+1
                 LDA     UMATHI
                 STA     ARGP+1
                 STX     GE
-.LBD63          STX     VARP
-SHFF0 = LBD63+1
+                STX     VARP
                 STY     GE+1
                 STY     VARP+1
                 JSR     CPFD2
