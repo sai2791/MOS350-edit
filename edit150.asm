@@ -65,48 +65,30 @@ ncstrt  =       &07             ; Normal start line
 ;
 
 STRING          = $0000
-STRINGd        = $0001
 OSHWM           = $0002
-PAJEd          = $0003
 TMAX            = $0004
-TMAXd          = $0005
 FULLSC         = $0005
 TEMP            = $0006
-thelot          = $0006
-TEMPd          = $0007
+THELOT          = $0006
 ADDR            = $0008
-ADDRd          = $0009
 ARGP            = $000A
-ARGPd          = $000B
 VARP            = $000C
-VARPd          = $000D
 TP              = $000E
-TPd            = $000F
 GS              = $0010
-GSd            = $0011
 GE              = $0012
-GEd            = $0013
 XEFF            = $0014
 LASTSP          = $0015
 DIFF            = $0016
 CENTRE          = $0017
 SMATLO          = $0018
-SMATLOd        = $0019
 SMATHI          = $001A
-SMATHId        = $001B
 UMATLO          = $001C
-UMATLOd        = $001D
 UMATHI          = $001E
-UMATHId        = $001F
 HYMEM           = $0020
-HYMEMd         = $0021
 tstart          = $0022
-tstartd        = $0023
 BRKACT          = $0024
 SIZE            = $0025
-SIZEd          = $0026
 maxsiz          = $0027
-maxsizd        = $0028
 PWTFLG          = $0029
 PRTFLG          = $002A
 options         = $002B
@@ -143,7 +125,6 @@ OFFSET          = $0049
 PBOLD           = $004A
 LASTTAB         = $004B
 LINE            = $004C
-LINEd          = $004D
 INDEXH          = $004E
 mark_count      = $004F
 MARKX           = $0050
@@ -157,13 +138,9 @@ REPLFLAG        = $0057
 ENDP            = $005B
 ENDPd          = $005C
 SCP             = $005D
-SCPd           = $005E
 TEXTP           = $005F
-TEXTPd         = $0060
 scratc          = $0061
-scratcd        = $0062
 ANOTHSTRING     = $007B
-ANOTHSTRINGd   = $007C
 L007D           = $007D
 L007E           = $007E
 L007F           = $007F
@@ -180,7 +157,6 @@ L019F           = $019F
 L01A0           = $01A0
 USERV           = $0200
 BRKV            = $0202
-BRKVd          = $0203
 IRQ1V           = $0204
 IRQ2V           = $0206
 CLIV            = $0208
@@ -210,27 +186,17 @@ FRBUFF          = $0400
 GRBUFF          = $0464
 nambuf          = $04C8
 oldsta          = $04FC
-oldstad        = $04FD
 LINBUFF         = $0500
 noregs          = $0500
-LINBUFFd       = $0501
 LINENO          = $0502
-LINENOd        = $0503
 PAGEEH          = $0514
-PAGEEHd        = $0515
 PAGEOH          = $0516
-PAGEOHd        = $0517
 PAGEEF          = $0518
-PAGEEFd        = $0519
 PAGEOF          = $051A
-PAGEOFd        = $051B
 TABLST          = $051C
-TABLSTd        = $051D
 L052F           = $052F
 MACLST          = $0530
-MACLSTd        = $0531
 stracc          = $0600
-STRACCd        = $0601
 trnlst          = &0600
 L060A           = $060A
 L060D           = $060D
@@ -243,7 +209,6 @@ SCNTHISTK       = $0718
 FIELDMMXTAB     = $071E
 FIELDOFFTAB     = $0728
 SCRIM           = $0732
-SCRIMd         = $0733
 machtype        = $0752
 L0753           = $0753
 PRMPTL          = $07E5
@@ -310,7 +275,7 @@ CPU 1
 
                 LDA     L0083,X
 ;
-; Recofnise *help and *edit 
+; Recognise *help and *edit 
 .service        PHA
                 TAX
                 TYA
@@ -332,10 +297,10 @@ CPU 1
                 LDX     #$F6
 ; Print the ROM name from Header, when we get the brk, print space and 
 ; continue
-.prnthelp       LDA     L7F13,X
+.prnthelp       LDA     L7F13,X 
                 BNE     notaspace
 
-                LDA     #$20
+                LDA     " "
 .notaspace      JSR     OSASCI
 
                 INX
@@ -366,7 +331,7 @@ CPU 1
                 CMP     #$21       ; is this a "!"
                 BCS     ucomEX
 
-.ucommi         LDX     L00F4
+.ucommi         LDX     L00F4      ; EDIT ROM number
                 LDA     #$8E       ; Enter Languge Rom
                 JMP     OSBYTE
 ;
@@ -472,7 +437,7 @@ CPU 1
                 JMP     EDITco
 
 .ackesc         LDA     #$7E
-                JMP     OSBYTE
+                JMP     OSBYTE    ; Acknowledge escape condition
 
 .supvBR         JSR     OSNEWL
 
@@ -491,16 +456,39 @@ CPU 1
                 CLD
                 LDX     #$FF
                 TXS
-                LDA     #$00
-                LDX     #$01
-                JSR     OSBYTE
+ ; On entry, X=0  - Generate error number 247 giving host and OS type
+ ;           X<>0 - Return host/OS in X
 
+ ; On exit,  OS type:
+ ; 0 Electron/Communicator  
+ ; 1 BBC                    
+ ; 2 BBC B+                
+ ; 3 Master 128
+ ; 4 Master ET
+ ; 5 Master Compact
+
+                LDA     #$00
+                LDX     #$01      ; Return Host type in X
+                JSR     OSBYTE    ; Get machine type
                 CPX     #$03
                 BCC     getsettings
 
                 TXA
 .getsettings    STA     machtype
-                LDA     #$A1
+
+; On entry:
+;   X=byte to read or 255 for to read configuration RAM/EEPROM size
+; On exit:
+;   X corrupted or &FF if no configuration RAM/EEPROM support
+;   Y=byte read or configuration RAM/EEPROM size
+;
+; CMOS Byte 8
+;    8 b0-b2  EDIT screen mode
+;      b3     EDIT TAB to columns/words
+;      b4     EDIT overwrite/insert
+;      b5     EDIT display returns
+
+                LDA     #$A1       ; Read CMOS
                 LDX     #$08
                 JSR     OSBYTE
 
@@ -508,10 +496,10 @@ CPU 1
                 TYA
                 LDY     #$0D
                 AND     #$40
-                BEQ     L816D
+                BEQ     setCRnotLF
 
                 LDY     #$0A
-.L816D          STY     termin
+.setCRnotLF     STY     termin
                 LDA     #$79
                 STA     BRKV
                 LDA     #$80
@@ -528,22 +516,20 @@ CPU 1
                 STA     scratc+1
                 STX     scratc
                 LDX     #$14
+
 .EDITol         DEX
                 BEQ     EDIToz
-
                 JSR     L829C
 
-                CMP     #$0D
-                BEQ     L8213
-
-                CMP     #$20
+                CMP     cr
+                BEQ     EditozOther
+                CMP     " "
                 BEQ     L81A1
-
-                CMP     #$2E
+                CMP     "."
                 BNE     EDITol
 
 .L81A1          DEX
-                BEQ     L8213
+                BEQ     EditozOther
 
                 JSR     L829C
 
@@ -591,38 +577,35 @@ CPU 1
 .EDITon         LDX     #$00
                 LDA     L01A0
                 CMP     #$0D
-.EDIToz         BEQ     L8213
+.EDIToz         BEQ     EditozOther
 
 .L81F6          LDA     L01A0,X
-                CMP     #$0D
+                CMP     cr
                 BEQ     L8205
-
-                CMP     #$20
-                BCC     L8213
+                CMP     " " 
+                BCC     EditozOther
 
                 CMP     #$7F
-                BCS     L8213
+                BCS     EditozOther
 
 .L8205          STA     nambuf,X
                 INX
-                CMP     #$0D
+                CMP     cr
                 BNE     L81F6
 
                 LDA     #$01
                 STA     cursed
                 BRA     EDIToy
 
-.L8213          LDX     #$FF
+.EditozOther    LDX     #$FF
                 STX     cursed
-                LDA     #$0D
+                LDA     cr
                 STA     nambuf
                 LDA     termin
-                CMP     (OSHWM)
+                CMP     (PAJE)
                 BNE     EDIToy
-
                 CMP     (TMAX)
                 BNE     EDIToy
-
                 JSR     memstate
 
 .EDIToy         LDA     #$0D
@@ -632,22 +615,17 @@ CPU 1
                 STZ     MODFLG
                 LDA     #$03
                 JSR     OSWRCH
-
                 LDA     cursed
                 BEQ     zippo
-
                 DEC     A
                 BEQ     zappo
-
-                JMP     EDIT
+                JMP     EDIT   ; and away we go...
 
 .zippo          JSR     EDITmd
-
                 JMP     OLDTEXT
 
 .zappo          STZ     BRKACT
                 JSR     EDITmd
-
                 JSR     EDITi2
 
                 LDY     #$00
@@ -665,7 +643,6 @@ CPU 1
 
 .readnx         INC     scratc
                 BNE     L826D
-
                 INC     scratc+1
 .L826D          RTS
 
@@ -674,14 +651,11 @@ CPU 1
 .tsthex         LDA     L01A0,Y
                 CMP     #$30
                 BCC     hexend
-
                 CMP     #$3A
                 BCC     OKhex
-
                 SBC     #$37
                 CMP     #$0A
                 BCC     hexend
-
                 CMP     #$10
                 BCS     hexend
 
@@ -703,14 +677,19 @@ CPU 1
 
 .readby         PHX
                 PHY
-                JSR     XYscra
+                JSR     XYscra    ; osword block at &0061
 
+; Read I/O Processor Memory 
+; On entry:
+;   XY!0=address to read from
+; On exit:
+;   XY?4=the byte read
                 LDA     #$05
                 JSR     OSWORD
 
                 PLY
                 PLX
-                LDA     scratc+4
+                LDA     scratc+4   ; Byte at address read
                 RTS
 
 .paslnm         PHP
@@ -747,7 +726,7 @@ CPU 1
                 BNE     L82D3
 
 .oldnam         LDA     nambuf
-                CMP     #$0D
+                CMP     cr
                 BEQ     nonam
 
                 LDX     #$C8
@@ -799,9 +778,7 @@ CPU 1
 
                 BRK
                 EQUB    $01
-
                 EQUS    "No name found"
-
                 EQUB    $00
 
 .namfnd         LDA     #$0D
@@ -844,9 +821,7 @@ CPU 1
 .pasloa         JSR     paslnm
 
                 JSR     prompt
-
-               EQUS    "Loading "
-
+                EQUS    "Loading "
                 EQUB    $EA
 
 .L837B          JSR     writna
@@ -860,7 +835,7 @@ CPU 1
                 ; using a random access filing system,
                 ; so can quickly check size of file.
 
-                LDA     #$05
+                LDA     #$05     ; Read Information
                 JSR     XYscra
                 JSR     OSFILE
                 CMP     #$01
@@ -934,7 +909,7 @@ CPU 1
                 STA     scratc + $0E
                 LDA     ENDP + 1
                 STA     scratc + $0F
-                LDA     #$00
+                LDA     #$00      ; Save file
                 JSR     XYscra
 
                 JMP     OSFILE
@@ -1013,7 +988,6 @@ CPU 1
 
 .escTST         BIT     ESCFLG
                 BMI     escSET
-
                 RTS
 
 .rdlnre         LDY     #$00
@@ -1135,7 +1109,7 @@ CPU 1
 .chkptr         CMP     HYMEM+1
                 BCS     CHKPTX
 
-                CMP     PAJEd
+                CMP     PAJE + 1
                 BCS     CHKPTX
 
                 PLA
@@ -1185,14 +1159,21 @@ CPU 1
                 JMP     STATUS
 
 .CRTOGG         LDA     #$20
-.predomode      EOR     options
+.predomode      EOR     options     ; toggle show CR/LF
 .domode         STA     options
                 PHX
                 PHY
                 TAY
+
+ ; OSBYTE &A2 - Write CMOS
+ ; On entry:
+ ;  X=index of byte to write
+ ;  Y=byte to write
+ ; On exit:
+ ;  undefined               
                 LDA     #$A2
-                LDX     #$08
-                JSR     OSBYTE
+                LDX     #$08        ; Edit Byte
+                JSR     OSBYTE      ; Write EDIT configuration to CMOS
 
                 PLY
                 PLX
@@ -1913,6 +1894,12 @@ CPU 1
                 LDA     L007F
                 ADC     #$80
                 STA     (L007D)
+; Read Character definition
+; OSWORD &0A
+; On entry:
+;  XY?0=character
+; On exit:
+ ; XY+1..8=the character raster data.
                 LDA     #$0A
                 LDX     L007D
                 LDY     L007E
@@ -2439,25 +2426,25 @@ CPU 1
                 ; shift = &90
                 ; ctrl  = &A0
  
-                LDA     #$04
-                LDX     #$02
+                LDA     #$04       ; Define action of cursor edit keys
+                LDX     #$02       ; Set as softkeys 11-15
                 JSR     OSBYTE     ; tab key pretends to be soft key 10
 
-                LDA     #$DB
+                LDA     #$DB       ; Read/Write ASCII code for TAB key
                 LDX     #$8A
-                JSR     OSBYTEwithY
+                JSR     OSBYTEwithY   ; Osbyte with Y = 0
 
-                LDA     #$E3
-                LDX     #$02
-                JSR     OSBYTEwithY
+                LDA     #$E3       ; Write Ctrl-F keys
+                LDX     #$02       ; return &00,character (MOS 3.50, MOS 5 and later)
+                JSR     OSBYTEwithY   ; Osbyte with Y = 0
 
-                DEC     A
-                LDX     #$02
-                JSR     OSBYTEwithY
+                DEC     A          ; #$E2 - Write Shift-F keys
+                LDX     #$02       ; return &00,character (MOS 3.50, MOS 5 and later)
+                JSR     OSBYTEwithY   ; Osbyte with Y = 0
 
                 LDX     #$02
-.INITEX         DEC     A
-.OSBYTEwithY    LDY     #$00
+.INITEX         DEC     A          ; #$E1 - Write Funtion keys
+.OSBYTEwithY    LDY     #$00       ; Ignore
                 JMP     OSBYTE
 
 .initus         
@@ -2466,15 +2453,15 @@ CPU 1
                 LDX     #$09
                 JSR     OSBYTEwithY     ; tab key emits 9
 
-                LDA     #$04
+                LDA     #$04       ; Cursor Editing keys to normal
                 LDX     #$00
                 JSR     OSBYTE
 
-                LDA     #$E3
+                LDA     #$E3       ; Ctrl-F keys to normal
                 LDX     #$90
                 JSR     OSBYTEwithY
 
-                DEC     A
+                DEC     A          ; #$E2 - Shift-F keys to normal
                 LDX     #$80
                 JSR     OSBYTEwithY
 
@@ -2614,13 +2601,13 @@ CPU 1
                 STZ     SCRNPY
                 RTS
 
-.GETWIN         LDA     #$A0
-                LDX     #$0A
+.GETWIN         LDA     #$A0            ; Read VDU Variable
+                LDX     #$0A            ; Current Text window right hand column
                 JSR     OSBYTE
 
                 STX     PAGEWI
                 STY     PAGELE
-                LDX     #$08
+                LDX     #$08            ; Current text window left hand column
                 JSR     OSBYTE
 
                 TYA
@@ -2680,18 +2667,18 @@ CPU 1
                 LDX     #$00
 .L96DC          RTS
 
-.newtxcont      LDA     #$81
+.newtxcont      LDA     #$81      ; Read Key within time limit
                 TAX
                 LDY     #$03
                 JSR     OSBYTE
 
                 TYA
-                BNE     L96EB
+                BNE     WasEscPressed     ; Key was not pressed in time
 
                 TXA
                 BRA     L96D1
 
-.L96EB          JSR     escTST
+.WasEscPressed  JSR     escTST    ; Was Escape pressed?
 
                 LDA     #$00
                 TAX
@@ -3321,7 +3308,7 @@ STRMEX = STATSI+1
 
                 LDA     GE+1
                 DEC     A
-                CMP     PAJEd
+                CMP     PAJE + 1
                 BCS     RETLOK
 
                 BRK
@@ -3815,7 +3802,7 @@ STRMEX = STATSI+1
 
 .PRINASIS       JSR     STFILE
 
-                JSR     LA96C
+                JSR     MovWrdGEtoTP
 
                 JSR     rstPrtDes
 
@@ -4865,20 +4852,20 @@ STRMEX = STATSI+1
                 TRB     LINENO+1   ; leave format alone!
                 RTS
 
-.LA96C          LDA     GE
+.MovWrdGEtoTP   LDA     GE
                 STA     TP
                 LDA     GE+1
                 STA     TP+1
                 RTS
 
-.rstPrtDes      LDA     #$05
+.rstPrtDes      LDA     #$05      ; Set printer destination to printer sink
                 LDX     #$00      ; just for jes's code, set and reset printer type
-                JSR     OSBYTE
+                JSR     OSBYTE    ; On Exit X contains previous printer destination
 
-                JSR     OSBYTE
+                JSR     OSBYTE    ; Reset printer destination to what it was before
 
                 LDA     #$02
-                JMP     OSWRCH
+                JMP     OSWRCH    ; Enable Printer
 
 .MACRO          LDA     ADDR
                 PHA
@@ -4969,7 +4956,7 @@ STRMEX = STATSI+1
                 LDA     stracc,Y     ; stracc(TRNLST)
                 STA     scratc
                 JSR     XYscra
-                LDA     #$0A
+                LDA     #$0A         ; Read Character Definition
                 JMP     OSWORD
 
 .DOVDU          BIT     UMATHI       ; UMATHI(BOLD)
@@ -5278,15 +5265,15 @@ STRMEX = STATSI+1
                 PHY
 
 .INKEYL         JSR     escTST
-                LDX     #$FF
+                LDX     #$FF         ; Scan for key &FF  - INKEY(-128)
                 LDY     #$FF
                 LDA     #$81
-                JSR     OSBYTE
+                JSR     OSBYTE       ; Read Key within time limit
                 CPX     #$FF
-                BNE     INKEYL
+                BNE     INKEYL       ; Key was not pressed
                 LDA     #$0F
                 LDX     #$FF
-                JSR     OSBYTE
+                JSR     OSBYTE       ; Flush all input buffers
                 PLY
                 PLX
                 RTS
@@ -5328,29 +5315,26 @@ STRMEX = STATSI+1
 .NUMLAP         LDA     "0"
                 STA     BUFF,X
                 SEC
-.NUMLP          LDA     TEMP         ; TODO HERE 
-                SBC     LBBF7,X
+.NUMLP          LDA     TEMP         
+                SBC     WOPTBL,X
                 TAY
                 LDA     TEMP+1
-                SBC     LBBFC,X
+                SBC     WOPTBH,X
                 BCC     OUTNUM
-
                 STY     TEMP
                 STA     TEMP+1
-                INC     scratc+$0A,X
+                INC     BUFF,X    ; scratc+$0A
                 BNE     NUMLP
 
 .OUTNUM         DEX
                 BPL     NUMLAP
-
                 PLA
                 STA     TEMP
                 LDX     #$08
 .LZB            DEX
                 CPX     TEMP
                 BEQ     LASTZ
-
-                LDA     scratc+$0A,X
+                LDA     BUFF,X    ; scratc+$0A
                 AND     #$0F
                 BEQ     LZB
 
@@ -5365,16 +5349,16 @@ STRMEX = STATSI+1
 .ROMAN          PHA
                 CMP     #$0A
                 BCS     AAA
-
                 LDA     #$FF
                 PHA
                 LDX     #$0C
+                
 .ROMANL         SEC
                 LDA     TEMP
-                SBC     LAD1F,X
+                SBC     NUMERL,X
                 TAY
                 LDA     TEMP+1
-                SBC     LAD2C,X
+                SBC     NUMERH,X
                 BCC     ROMANO
 
                 STY     TEMP
@@ -5382,10 +5366,10 @@ STRMEX = STATSI+1
                 TXA
                 ASL     A
                 TAY
-                LDA     LAD39,Y
+                LDA     CHARS,Y
                 PHA
                 LDA     CHARS+1,Y
-                CMP     #$20
+                CMP     " "
                 BEQ     ROMANL
 
                 PHA
@@ -5396,7 +5380,7 @@ STRMEX = STATSI+1
 
 .ROMANG         PLA
                 INX
-                STA     scratc+$0A,X
+                STA     BUFF,X    ; scratc+$0A
                 CMP     #$FF
                 BNE     ROMANG
 
@@ -5406,9 +5390,9 @@ STRMEX = STATSI+1
                 BEQ     LASTZ
 
                 STX     TEMP
-.CASELP         LDA     scratc+$0A,X
+.CASELP         LDA     BUFF,X    ; scratc+$0A
                 ORA     #$20
-                STA     scratc+$0A,X
+                STA     BUFF,X    ; scratc+$0A
                 DEX
                 BPL     CASELP
 
@@ -5435,9 +5419,9 @@ STRMEX = STATSI+1
                 BRA     AAALOP
 
 .AAAGOT         LDA     TEMP
-                ADC     #$5B
+                ADC     #$5B     ; 26+"A"
                 LDX     #$00
-.AAALON         STA     scratc+$0A,X
+.AAALON         STA     BUFF,X  ; scratc+$0A
                 INX
                 DEY
                 BNE     AAALON
@@ -5445,185 +5429,186 @@ STRMEX = STATSI+1
                 DEX
                 BRA     CASECH
 
-.LAD1F          EQUB    $01,$04,$05,$09,$0A,$28,$32,$5A
+.NUMERL         EQUB    $01,$04,$05,$09,$0A,$28,$32,$5A
                 EQUB    $64,$90,$F4,$84,$E8
 
-.LAD2C          EQUB    $00,$00,$00,$00,$00,$00,$00,$00
+.NUMERH         EQUB    $00,$00,$00,$00,$00,$00,$00,$00
                 EQUB    $00,$01,$01,$03,$03
 
-.LAD39          EQUS    "I IVV IXX XLL XCC CDD DMM a"
+.CHARS          EQUS    "I IVV IXX XLL XCC CDD DMM a"
 
 .CMDS           EQUS    "af"    
 
-.LAD55          EQUW    $A604
+.LAD55          EQUW    ROUTAF
 
                 EQUS    "an"
 
-                EQUW    $A624
+                EQUW    ROUTAN
 
                 EQUS    "bl"
 
-                EQUW    $A694
+                EQUW    ROUTBL
 
                 EQUS    "bp"
 
-                EQUW    $A82F
+                EQUW    ROUTBP
 
                 EQUS    "cc"
 
-                EQUW    $A699
+                EQUW    ROUTCC
 
                 EQUS    "ce"
 
-                EQUW    $A69F
+                EQUW    ROUTCE
 
                 EQUS    "ch"
 
-                EQUW    $A6A4
+                EQUW    ROUTCH
 
                 EQUS    "co"
 
-                EQUW    $A7DE
+                EQUW    ROUTCO
 
                 EQUS    "dm"
 
-                EQUW    $A6FD
+                EQUW    ROUTDM
 
                 EQUS    "ds"
 
-                EQUW    $A721
+                EQUW    ROUTDS
 
                 EQUS    "ef"
 
-                EQUW    $A748
+                EQUW    ROUTEF
 
                 EQUS    "eh"
 
-                EQUW    $A75E
+                EQUW    ROUTEH
 
                 EQUS    "en"
 
-                EQUW    $A794
+                EQUW    ROUTEN
 
                 EQUS    "ep"
 
-                EQUW    $A79C
+                EQUW    ROUTEP
 
                 EQUS    "ff"
 
-                EQUW    $A7A6
+                EQUW    ROUTFF
 
                 EQUS    "fo"
 
-                EQUW    $A73E
+                EQUW    ROUTFO
 
                 EQUS    "he"
 
-                EQUW    $A754
+                EQUW    ROUTHE
 
                 EQUS    "ic"
 
-                EQUW    $A7BC
+                EQUW    ROUTIC
 
                 EQUS    "ig"
 
-                EQUW    $A752
+                EQUW    ROUTIG
 
                 EQUS    "in"
 
-                EQUW    $A7C2
+                EQUW    ROUTIN
 
                 EQUS    "io"
 
-                EQUW    $A7CA
+                EQUW    ROUTIO
 
                 EQUS    "ix"
 
-                EQUW    $A7EC
+                EQUW    ROUTIX
 
                 EQUS    "ju"
 
-                EQUW    $A802
+                EQUW    ROUTJU
 
                 EQUS    "ll"
 
-                EQUW    $A805
+                EQUW    ROUTLL
 
                 EQUS    "ls"
 
-                EQUW    $A80D
+                EQUW    ROUTLS
 
                 EQUS    "lv"
 
-                EQUW    $A815
+                EQUW    ROUTLV
 
                 EQUS    "ne"
 
-                EQUW    $A826
+                EQUW    ROUTNE
 
                 EQUS    "nj"
 
-                EQUW    $A833
+                EQUW    ROUTNJ
 
                 EQUS    "nn"
 
-                EQUW    $A836
+                EQUW    ROUTNN
 
                 EQUS    "of"
 
-                EQUW    $A726
+                EQUW    ROUTOF
 
                 EQUS    "oh"
 
-                EQUW    $A732
+                EQUW    ROUTOH
 
                 EQUS    "op"
 
-                EQUW    $A839
+                EQUW    ROUTOP
 
                 EQUS    "os"
 
-                EQUW    $A843
+                EQUW    ROUTOS
 
                 EQUS    "pl"
 
-                EQUW    $A853
+                EQUW    ROUTPL
 
                 EQUS    "po"
 
-                EQUW    $A865
+                EQUW    ROUTPO
 
                 EQUS    "rf"
 
-                EQUW    $A86D
+                EQUW    ROUTRF
 
                 EQUS    "sp"
 
-                EQUW    $A872
+                EQUW    ROUTSP
 
                 EQUS    "ss"
 
-                EQUW    $A899
+                EQUW    ROUTSS
 
                 EQUS    "ta"
 
-                EQUW    $A89E
+                EQUW    ROUTTA
 
                 EQUS    "tc"
 
-                EQUW    $A8B6
+                EQUW    ROUTTC
 
                 EQUS    "ti"
 
-                EQUW    $A8BC
+                EQUW    ROUTTI
 
                 EQUS    "tr"
 
-                EQUW    $A8CA
+                EQUW    ROUTTR
 
                 EQUS    "ul"
 
-                EQUW    $A8DF
+                EQUW    ROUTUL
+;; NOCMDS      * ( . - CMDS )
 
 .SCRNUD         JSR     LENGTH
 
@@ -5639,10 +5624,12 @@ STRMEX = STATSI+1
                 BNE     SCRNU1
 
                 INC     UPDATE
+                ; Update marks set, if any, to locate them for superimposition.
 .SCRNU1         JSR     MARKUPDATE
 
                 JSR     CUROFF
-
+                ; if screen messier than would be fixed up by intended update,
+                ; then do something about it.
                 LDA     SCRNPY
                 CMP     UPDATE
                 BCC     SCUDCO
@@ -5650,109 +5637,117 @@ STRMEX = STATSI+1
                 STA     UPDATE
 .SCUDCO         STZ     SCRNPY
                 LDA     UPDATE
-                CMP     #$06
+                CMP     THELOT      ; #$06 (THELOT)
                 BNE     SCUDTI
 
                 JSR     CLEARSCREEN
+                ; if fullscreen updaate is required, then find internal start
+                ; of screen, possibly forcing scrnY, and update top half.
 
 .SCUDTI         LDA     UPDATE
-                BEQ     SCUDEX
-
-                CMP     #$05
+                BEQ     SCUDEX      ; 'none'
+                CMP     FULLSCREEN  ; #$05 (FULLSCREEN)
                 BCC     SCUDBO
 
-                LDA     SCRNY
+.SCUDFS         LDA     SCRNY
                 JSR     TPGSBK
-
                 STA     SCRNY
                 DEC     A
                 STA     MAXSCRUPY
                 BMI     SCUDBO
-
                 LDA     #$00
                 LDX     TP
                 LDY     TP+1
                 JSR     UPDTLN
-
                 BCS     SCUDAB
 
-.SCUDBO         LDX     UPDATE
-                CPX     #$03
+.SCUDBO     
+                ; Output bottom half of screen, branching for hardscrolls.
+                LDX     UPDATE
+                CPX     HARDUP     ; #$03 (HARDUP)
                 BEQ     SCUDHU
-
-                CPX     #$04
+                CPX     HARDDOWN   ; #$04 (HARDDOWN)
                 BEQ     SCUDHD
 
                 LDY     PAGELE
                 STY     MAXSCRUPY
+                ; Set up A,X,Y for bottom half update
                 LDA     SCRNY
                 LDX     GE
                 LDY     GE+1
                 JSR     UPDTLN
-
                 BCC     SCUDEX
 
-.SCUDAB         LDA     #$02
+.SCUDAB         
+                ; Record the fact that screen isn't totally up-to-date.
+                LDA     CSRONW    ; #$02 (CSRONW)
                 CMP     UPDATE
                 BCS     SCUDAS
-
-                LDA     #$05
+                LDA     FULLSCREEN ; #$05
 .SCUDAS         STA     SCRNPY
 .SCUDEX         STZ     UPDATE
                 RTS
 
-.SCUDHU         JSR     CSR0STATUSY
+.SCUDHU         
+                ; Push against bottom to scroll up
+                JSR     CSR0STATUSY
 
-                LDA     #$0A
-.SCHULP         JSR     OSWRCH
-
+                LDA     DOWN    ; #$0A (DOWN)
+                JSR     OSWRCH
+                ; Scroll scrim up.
                 LDX     #$FF
-.LAE7B          INX
+
+.SCHULP         INX
                 LDA     SCRIM+1,X
                 STA     SCRIM,X
                 CPX     PAGELE
-                BNE     LAE7B
+                BNE     SCHULP
 
                 STZ     SCRIM+1,X
                 JSR     STATUS
-
                 LDA     PAGELE
                 BRA     SCHUDC
 
-.SCUDHD         JSR     VSTRNG
-
-                EQUB    $1E,$0B
-
+.SCUDHD         
+                ; Rewrite status, then push against top to scroll down 
+                JSR     VSTRNG
+                EQUB    HOME,UP   ; $1E,$0B
 .LAE95          EQUB    $EA
+                ; Scroll scrim down.
 
 .LAE96          LDY     PAGELE
+
 .SCHDLP         LDA     SCRIM,Y
                 STA     SCRIM+1,Y
                 DEY
                 BPL     SCHDLP
-
                 STZ     SCRIM
                 JSR     STATUS
-
                 LDA     #$00
 .SCHUDC         STA     MAXSCRUPY
                 LDX     SCP
                 LDY     SCP+1
                 BNE     UPDTLN
-
                 TAY
-.WIPELINE       PHY
+
+.WIPELINE       
+                ; Clear a line, assigning new scrim value. Y is line to clear.
+                PHY
                 JSR     CSR0Y
-
-                LDA     #$20
+                LDA     " "
                 JSR     OSWRCH
-
                 LDA     #$00
                 PLY
-.WIPETA         STA     ATEMP
+.WIPETA         
+                ; Assign scrim entry for a line, clearing old tail of line.
+                ; Entry - A = New scrim entry
+                ;        Y = screen Y-coord
+                ; Exit  - Tail of line wiped.
+                ;        scrim updated
+                ;        A,Y preserved.
+                STA     ATEMP
                 CMP     SCRIM,Y
                 BCS     WTSCRM
-
                 LDA     machtype
                 BEQ     WIPEDETEXT
 
@@ -5767,7 +5762,6 @@ STRMEX = STATSI+1
                 JSR     OSWRCH
 
                 JSR     VSTRNG
-
                 EQUB    $17
 
                 EQUB    $08,$05,$06,$00,$00,$00,$00,$00
@@ -5810,15 +5804,25 @@ STRMEX = STATSI+1
                 STA     SCRIM,Y
                 RTS
 
-.UPDTLN         STA     SCRUPY
+.UPDTLN         
+                ; Entry - A = Y-coord of 1st line to be output.
+                ;        XY --> 1st line to be output.
+                ;        maxscrupY = last line to be updated.
+                ; Exit  - line output, with rest of line wiped if necessary
+                ;        scrim,scrupY assigned (top bit set if no <CR> on line)
+                ;        If was last line (temp = hymem after update), then
+                ;        loop clearing lines until scrupY = pagelength.
+                ;        CC - Normal termination
+                ;        CS - Update aborted due to incoming character.
+                STA     SCRUPY
                 STX     TP
                 STY     TP+1
                 LDX     #$00
                 LDA     UPDATE
-                CMP     #$01
+                CMP     CSRTOCR  ; #$01 (CSRTOCR)
                 BEQ     UPDLC0
-
-                CMP     #$02
+                ; if updatedread = csronwards then start screen update from char under cursor.
+                CMP     CSRONWARDS  ; #$02 (CRSONWARDS)
                 BNE     UPDLCO
 
 .UPDLC0         LDX     SCRNX
@@ -5829,29 +5833,28 @@ STRMEX = STATSI+1
 .UPDLCO         PHX
                 LDY     SCRUPY
                 JSR     CSRXY
-
                 PLY
                 DEY
+
 .UPDLLP         INY
-                LDA     (TP),Y
+.UPDLL2         LDA     (TP),Y
                 CMP     termin
                 BEQ     UPDLCR
 
                 JSR     PASWRCH
-
                 CPY     PAGEWI
                 BNE     UPDLLP
-
                 BRA     UPDLEN
 
 .UPDLCR         JSR     PASWCR
 
-.UPDLEN         STY     COUNT
+.UPDLEN         STY     COUNT  ; Max csrX on this line.
+                ; Superimpose marks, if any, onto this line
                 LDY     MARKX
 .MOUTLP         DEY
                 BMI     MOUTEX
-
                 STY     INDEX
+                ; if 0 <= (Mark - TP) <= count, then this is csrX within line.
                 SEC
                 LDA     UMATLO,Y
                 SBC     TP
@@ -5859,64 +5862,55 @@ STRMEX = STATSI+1
                 LDA     UMATHI,Y
                 SBC     TP+1
                 BCC     MOUTLP
-
                 BNE     MOUTLP
-
                 CPX     COUNT
                 BEQ     MOUTMO
-
                 BCS     MOUTLP
 
 .MOUTMO         LDY     SCRUPY
                 JSR     CSRXY
-
                 LDA     INDEX
                 CLC
-                ADC     #$31
+                ADC     "1"
                 JSR     INVWRCH
-
                 LDX     COUNT
                 INX
                 JSR     CSRXY
-
                 LDY     INDEX
                 BRA     MOUTLP
 
-.MOUTEX         LDA     COUNT
+.MOUTEX         
+                ; Update TP, and see if have hit end of file.
+                LDA     COUNT
                 LDY     SCRUPY
                 JSR     WIPETA
-
-                JSR     TPPAP1
-
+                JSR     TPPAP1  ; A = count
                 BCS     UPDLNE
-
                 LDA     UPDATE
-                CMP     #$01
+                CMP     CSRTOCR ; #$01 (CSRTOCR)
                 BEQ     UPDLFI
-
                 LDY     SCRUPY
                 CPY     MAXSCRUPY
                 BCS     UPDLFI
-
+                ; Test if any characters/commands are being queued in buffer.
                 LDA     UPDATE
-                CMP     #$06
+                CMP     THELOT  ; #$06 (THELOT)
                 BEQ     QUEUEX
-
                 LDA     NEXTREADFLAG
                 BNE     QUEUCS
 
-                LDA     #$81
+                LDA     #$81    ; Read a key press within time limit
                 LDX     #$00
                 JSR     OSBYTEwithY
 
-                CPY     #$FF
+                CPY     #$FF    ; Key was pressed
                 BEQ     QUEUEX
 
                 JSR     escTST
-
                 INC     NEXTREADFLAG
                 STX     NXTCHR
-                STX     L0080
+                STX     L0080   ; TODO is there a name for this?
+
                 TXA
                 BNE     QUEUCS
 
@@ -5929,14 +5923,13 @@ STRMEX = STATSI+1
 .QUEUEX         INC     SCRUPY
                 LDX     #$00
                 JMP     UPDLCO
+                ; Overwrite sentinal EOT TERMIN with EOT character.
 
 .UPDLNE         LDX     COUNT
                 LDY     SCRUPY
                 JSR     CSRXY
-
-                LDA     #$2A
+                LDA     "*"
                 JSR     INVWRCH
-
                 BRA     UDELT1
 
 .UDLEOT         LDY     SCRUPY
@@ -5949,13 +5942,19 @@ STRMEX = STATSI+1
 .UPDLFI         CLC
                 RTS
 
-.PASWRCH        CMP     #$20
+.PASWRCH        
+                ; Entry - A = char to output.
+                ; Exit  - Y preserved
+                ;        ctrl ch     --> inverted or chr(255) depending on mode
+                ;        delete      --> inv ?
+                ;        other chars --> echoed
+                CMP     SPACE    ; #$20
                 BCC     PASWNC
 
-                CMP     #$7F
+                CMP     DELETE   ; #$7F
                 BNE     PASWOS
 
-                LDA     #$3F
+                LDA     "?"
                 BRA     INVWRCH
 
 .PASWOS         JMP     OSWRCH
@@ -5964,45 +5963,40 @@ STRMEX = STATSI+1
                 BIT     options
                 BEQ     PASWOS
 
-                LDA     #$24
-                BRA     INVWRCH
+                LDA     "$"       ; **
+                BRA     INVWRCH   ; **
 
-.PASWNC         ORA     #$40
-.INVWRCH        PHA
+.PASWNC         ORA     #$40 ; Output control character as inverted keytop.
+.INVWRCH        
+                ; Output character in inverse video (blob in mode 7).
+                ; Entry - A = character
+                ;        mode IN [0..7]
+                PHA
                 LDA     options
                 AND     #$07
                 CMP     #$07
                 BNE     INVWN7
-
                 PLA
                 LDA     #$FF
                 BRA     PASWOS
 
 .INVWN7         JSR     startI
-
                 PLA
                 JSR     OSWRCH
 
 .stopin         LDA     #$11
                 JSR     OSWRCH
-
                 LDA     #$80
                 JSR     OSWRCH
-
                 LDA     #$11
                 JSR     OSWRCH
-
                 LDA     #$07
                 JMP     OSWRCH
 
 .startI         JSR     VSTRNG
-
                 EQUB    $11
-
                 EQUB    $87
-
                 EQUB    $11
-
                 EQUB    $00
 
                 EQUB    $EA
@@ -6010,24 +6004,20 @@ STRMEX = STATSI+1
 .LB038          RTS
 
 .CURLT          JSR     STARTTEST
-
                 BCC     CLCONT
-
                 LDA     SCRNX
                 BEQ     CSREXI
 
 .CLCONT         DEC     SCRNX
                 BPL     CSREXI
-
                 LDA     PAGEWI
                 STA     SCRNX
+                ; C set if at start of text
+
 .CURUP          JSR     STARTTEST
-
                 BCS     CSREXI
-
                 LDA     #$01
                 JSR     MVLNBK
-
                 LDA     TSM
                 CMP     SCRNY
                 BCS     CUUPSC
@@ -6035,8 +6025,8 @@ STRMEX = STATSI+1
 .CUUPNS         DEC     SCRNY
                 BPL     CSREXI
 
-.CUUPSC         LDA     SCRNY
-                JSR     TPGSBK
+.CUUPSC         LDA     SCRNY ; In Top Scroll Margin. If more tehn TOP scroll Margin Width
+                JSR     TPGSBK ; from top of file, then assign Scroll Pointer, else move cursor up.
 
                 CMP     SCRNY
                 CLC
@@ -6046,7 +6036,7 @@ STRMEX = STATSI+1
                 STA     SCP
                 LDA     TP+1
                 STA     SCP+1
-                LDA     #$04
+                LDA     HARDDOWN  ; #$04 (HARDDOWN)
                 STA     UPDATE
                 RTS
 
@@ -6054,11 +6044,8 @@ STRMEX = STATSI+1
                 LDA     (GE),Y
                 CMP     termin
                 BNE     EASYRT
-
                 JSR     CURDWN
-
                 BCS     WORDXX
-
                 JSR     SCRNUD
 
 .curst          STZ     SCRNX
@@ -6069,18 +6056,13 @@ STRMEX = STATSI+1
                 RTS
 
 .EASYRT         JSR     CURRT
-
                 JSR     SCRNUD
-
                 BRA     CSREXI
 
 .WORDLT         LDA     SCRNX
                 BNE     CURLT
-
                 JSR     CURUP
-
                 BCS     WORDXX
-
                 JSR     SCRNUD
 
 .curend         LDA     CURRLEN
@@ -6091,22 +6073,17 @@ STRMEX = STATSI+1
 .CURRT          LDA     SCRNX
                 CMP     PAGEWI
                 BEQ     CURRCO
-
                 INC     SCRNX
                 BRA     CSREXI
 
 .CURRCO         JSR     ENDTES
-
                 BCS     CSREXI
-
                 STZ     SCRNX
+                ; C set if at text end
 .CURDWN         JSR     ENDTES
-
                 BCS     CSREXI
-
                 LDA     #$01
                 JSR     MVLNFD
-
                 LDA     SCRNY
                 CMP     BSM
                 BCS     CUDOSC
@@ -6114,7 +6091,14 @@ STRMEX = STATSI+1
                 INC     SCRNY
                 BRA     CSREXI
 
-.CUDOSC         STZ     SCP+1
+.CUDOSC         
+                ; In Bottom Scroll Margin.
+                ; If more than (Pagelength-Bottom Scroll Margin)
+                ; from bottom of file, then assign Scroll Pointer, else set SCP+1 to
+                ; 0 to indicate wipeline required.
+ 
+                STZ     SCP+1     ; Initalize SCP+1 to 0 implies
+                                  ; blank line required for scroll.
                 SEC
                 LDA     PAGELE
                 SBC     BSM
@@ -6127,7 +6111,7 @@ STRMEX = STATSI+1
                 STA     SCP
                 LDA     TP+1
                 STA     SCP+1
-.CUDOWS         LDA     #$03
+.CUDOWS         LDA     HARDUP   ; #$03 (HARDUP)
                 STA     UPDATE
                 CLC
 .WORDRX         RTS
@@ -6150,83 +6134,75 @@ STRMEX = STATSI+1
 .WORDR2         LDY     SCRNX
                 LDA     (GE),Y
                 JSR     WORDC
-
                 BCC     WORDRX
-
                 JSR     WORDRT
-
                 BRA     WORDR2
 
 .WORDL1         JSR     WORDLT
-
                 LDY     SCRNX
                 LDA     (GE),Y
                 JSR     WORDC
-
                 BCC     WORDL1
 
 .WORDL2         LDY     SCRNX
                 LDA     (GE),Y
                 JSR     WORDC
-
                 BCC     CURRT
-
                 JSR     WORDLT
-
                 BRA     WORDL2
 
 .WORDLEFT       LDA     CURRLEN
                 CMP     SCRNX
                 BCS     WORDL1
-
                 STA     SCRNX
+
 .WORDCX         SEC
                 RTS
+                ; C set if not wordc
 
-.WORDC          CMP     #$30
+.WORDC          CMP     "0"
                 BCC     WORDCX
 
-                CMP     #$3A
+                CMP     #$3A    ; "9" + 1
                 BCC     WORDCR
-
                 AND     #$DF
-                CMP     #$41
+                CMP     "A"
                 BCC     WORDCX
-
-                CMP     #$5B
+                CMP     #$5B    ; "Z" + 1
 .WORDCR         RTS
 
 .EDITi2         LDX     tstart
                 LDY     tstart+1
+
 .EDITtd         STX     GS
                 STY     GS+1
                 LDA     TMAX
                 STA     GE
                 LDA     TMAX+1
                 STA     GE+1
+
 .EDITxx         STZ     cursed
                 STZ     NEXTREADFLAG
                 STZ     MARKX
                 LDA     termin
-                STA     (OSHWM)
+                STA     (PAJE)  ; OSHWM (PAJE)
                 STA     (TMAX)
+                
 .STFILE         LDX     tstart
                 LDY     tstart+1
                 JSR     GPBKXY
-
-                STZ     SCRNX
+                STZ     SCRNX   ; CLR scrnY will be forced by scrnud
 .STFILX         RTS
 
-.CUREDF         LDA     BSM
+.CUREDF         LDA     BSM     ; Try to glue bottom of file to BSM.
                 STA     SCRNY
                 LDX     TMAX
                 LDY     TMAX+1
                 JSR     GPFDXY
-
                 JMP     NORMAX
 
 .CHKSCR         LDA     #$87
-                JSR     OSBYTE
+                JSR     OSBYTE   ; select mode if options and screen mode NOT the same 
 
                 LDA     options
                 AND     #$07
@@ -6235,45 +6211,46 @@ STRMEX = STATSI+1
                 STY     STRING
                 EOR     STRING
                 AND     #$07
-                BEQ     STFILX
+                BEQ     STFILX ; same ok
 
-.SELSCR         LDA     #$16
+.SELSCR         LDA     #$16   ; select the right screen mode
                 JSR     OSWRCH
 
                 LDA     options
                 AND     #$07
                 TAY
                 LDA     MODETB,Y
-                ORA     #$80
+                ORA     #$80   ; select any shadow around
                 JMP     OSWRCH
 
-.EDITmd         JSR     SELSCR
+.EDITmd         JSR     SELSCR     ; Set up 'EDIT'
 
-.EDITMA         LDA     #$83
-                JSR     OSBYTE
+.EDITMA         LDA     #$83       ; Read top of user RAM for mode
+                JSR     OSBYTE     ; Read PAJE
 
-                STX     OSHWM
-                STY     PAJEd
-                INC     A
-                JSR     OSBYTE
+                STX     PAJE       ;  OSHWM (PAJE)
+                STY     PAJE+1
+                INC     A          ; &84 
+                JSR     OSBYTE     ; Read HIMEM
 
-                STX     HIMEM
+                STX     HYMEM
                 STY     HYMEM+1
+
+                ; Set up edit (text) buffer delimiting pointers.
                 CLC
-                LDA     OSHWM
+                LDA     PAJE        ; OSHWM (PAJE)
                 ADC     #$01
                 STA     tstart
-                LDA     PAJEd
+                LDA     PAJE + 1
                 ADC     #$00
                 STA     tstart+1
                 LDA     HIMEM
-                SBC     #$00
+                SBC     #$00        ; CC Give -1
                 STA     TMAX
                 LDA     HYMEM+1
                 SBC     #$00
                 STA     TMAX+1
-                JSR     intpag
-
+                JSR     intpag      ; initalize pagelength and width
                 LDA     PAGELE
                 SEC
                 SBC     #$04
@@ -6282,22 +6259,30 @@ STRMEX = STATSI+1
                 STA     TSM
                 RTS
 
-.tsmcsr         LDA     SCRNY
+.tsmcsr         
+                ; Set Top Scroll Margin to current cursor line.
+                LDA     SCRNY
                 STA     TSM
                 BRA     noupda
 
-.bsmcsr         LDA     SCRNY
+.bsmcsr         
+                ; Set Bottom Scroll Margin to current cursor line.
+                LDA     SCRNY
                 STA     BSM
                 BRA     noupda
 
-.scmclr         STZ     TSM
+.scmclr         
+                ; Clear Scroll Margins.
+                STZ     TSM
                 LDA     PAGELE
                 STA     BSM
+
 .noupda         STZ     UPDATE
                 RTS
 
-.newtex         JSR     prompt
+.newtex         ; Clear text 
 
+                JSR     prompt
                 EQUS    "Clear text [Y,shf-f9 (exec),D (discard)]"
 
 .LB218          NOP
@@ -6320,30 +6305,27 @@ STRMEX = STATSI+1
                 BEQ     donew
 
                 ORA     #$20
-                CMP     #$64
+                CMP     "y"
                 BEQ     LB227
 
                 CMP     #$79
                 BNE     NEWTN
 
 .donew          JSR     memstate
-
                 JMP     EDITin
 
-.LOADfi         LDA     MODFLG
+.LOADfi         
+                ; Doesn't zap buffer until new file is correctly loaded.
+                LDA     MODFLG
                 CMP     #$01
                 BNE     LOADF2
 
                 JSR     prompt
-
                 EQUS    "Overwrite text [Y,f2]:"
-
                 EQUB    $07
-
                 EQUB    $EA
 
 .LB262          JSR     newtxcont
-
                 BNE     LB26A
 
                 TAX
@@ -6351,7 +6333,6 @@ STRMEX = STATSI+1
 
 .LB26A          CMP     #$82
                 BEQ     LOADF2
-
                 AND     #$DF
                 CMP     #$59
                 BNE     NEWTN
@@ -6359,90 +6340,69 @@ STRMEX = STATSI+1
 .LOADF2         JSR     prompt
 
                 EQUS    "Type filename to load:"
-
                 EQUB    $EA
 
 .LB28E          JSR     READNS
-
                 LDY     #$00
                 JSR     tload
-
                 JMP     EDITgt
 
-.SAVEfi         JSR     DFINIT
-
+.SAVEfi         
+                ; Save File 
+                JSR     DFINIT
                 CMP     #$01
                 BEQ     marksa
-
                 JSR     promtF
 
                 EQUS    "to save:"
-
                 EQUB    $07
 
 .LB2AC          NOP
                 JSR     READNS
-
                 JSR     dfblok
-
                 LDY     #$00
                 JSR     tsave
 
                 STZ     MODFLG
+
                 LDX     TEXTP
                 LDY     TEXTP+1
                 JSR     GPFDXY
-
                 JMP     NORMAX
 
 .marksa         JSR     promtF
-
                 EQUS    "for MARK TO CURSOR save:"
-
                 EQUB    $07,$EA
-
 .LB2E1          JSR     READNS
-
                 JSR     dfblok
-
                 LDY     #$00
                 LDA     (TEMP)
                 CMP     termin
                 BEQ     msbad
-
                 CMP     #$8B
                 BEQ     msbad
-
                 LDA     TEMP
                 STA     scratc
                 LDA     TEMP+1
                 STA     scratc+1
                 JSR     inSAVE
-
                 LDX     TEXTP
                 LDY     TEXTP+1
                 JSR     GPFDXY
-
                 JMP     NORMAX
 
 .msbad          BRK
                 EQUB    $01
-
                 EQUS    "Bad use of stored name"
-
                 EQUB    $00
 
 .insrtF         JSR     MKREFUSE
-
                 JSR     FINEPO
-
                 JSR     promtF
 
                 EQUS    "to insert:"
-
 .LB334          NOP
                 JSR     READNS
-
                 LDA     GS
                 STA     ADDR
                 LDA     GS+1
@@ -6456,80 +6416,77 @@ STRMEX = STATSI+1
                 STX     GS
                 STY     GS+1
                 JSR     MODIFY
-
-                LDX     ADDR
+                LDX     ADDR     ; Move to start of inserted file.
                 LDY     ADDR+1
                 JSR     GPBKXY
-
                 JMP     NORMAL
 
-.edSTAR         LDA     #$01
+.edSTAR         
+                ; OSCLI processing
+                LDA     #$01
                 STA     BRKACT
                 JSR     initus
 
                 JSR     prompt
-
                 EQUS    "Command line"
-
                 EQUB    $EA
 
 .starCN         JSR     OSNEWL
 
-.starlo         LDA     #$2A
+.starlo         LDA     "*"
                 JSR     OSWRCH
 
+; Input line of text
+; OSWORD &00
+; On entry:
+; XY?0..1=>string buffer
+; XY?2   =maximum line length (buffer size minus 1)
+; XY?3   =minimum acceptable ASCII value
+; XY?4   =maximum acceptable ASCII value
+; On exit:
+;  Cy=0 if not terminated by Escape
+;  Y is the line length excluding the CR, so buffer+Y will point to the CR
+;  A,X undefined
                 LDA     #$00
-                LDY     #$B3
-                LDX     #$97
+                LDY     #$B3   ; :MSB: starCB
+                LDX     #$97   ; starCB
                 JSR     OSWORD
-
                 BCS     stares
-
-                LDA     LINBUFF
-                CMP     #$0D
+                LDA     comman ; LINBUFF (comman)
+                CMP     cr
                 BEQ     starex
 
-                LDX     #$00
-                LDY     #$05
+                LDX     #$00   ; :LSB: comman
+                LDY     #$05   ; :MSB: comman
                 JSR     OSCLI
-
                 BRA     starlo
 
-.LB397          EQUW    $0500
-
+.comma          EQUW    $0500
                 EQUB    $EE,$20
-
                 EQUB    $FF
 
 .stares         JSR     ackesc
 
 .starex         LDA     #$DA
                 LDX     #$00
-                JSR     OSBYTEwithY
+                JSR     OSBYTEwithY   ; Abandon VDU Queue
 
                 JSR     VSTRNG
-
                 EQUB    $85
-
                 EQUB    $04
-
                 EQUB    $03
-
                 EQUB    $0F
-
                 EQUB    $0D
-
                 EQUB    $1A
-
                 EQUB    $EA
 
 .LB3AF          JSR     CHKSCR
-
                 JSR     inited
-
                 JMP     EDITco
 
-.allowC         LDA     #$01
+.allowC         
+                ; Allow cursor editing & softkey use. Terminated by CR.
+                LDA     #$01
                 STA     cursed
                 JSR     initus
 
@@ -6538,43 +6495,34 @@ STRMEX = STATSI+1
 .BADMOD         BRK
                 EQUB    $01
 
-                EQUS    "Only 0,1,3,4,6,7,D or K"
+                EQUS    "Only 0,1,3,4,6,7,D or K"    ; followed by 0
 
-.VERTTB         EQUB    $00,$00,$07,$00,$00,$0E,$00
+.VERTTB         EQUB    $00,$00,$07,$00,$00,$0E,$00  ; plus another 0 in modelb 
 
-.MODETB         EQUB    $00,$01,$00,$03,$04,$00,$06,$07
+.MODETB         EQUB    $00,$01,$00,$03,$04,$00,$06,$07  ; and the screen modes
 
 .GETMOD         JSR     prompt
 
                 EQUS    "New Mode:"
-
                 EQUB    $EA
 
 .LB3F7          JSR     IndOSRDCH
-
                 JSR     OSWRCH
-
-                CMP     #$38
+                CMP     #$38        ; "7" + 1
                 BCS     SETKEY
-
-                SBC     #$2F
+                SBC     #$2F        ; "0" - 1
                 BCC     BADMOD
-
                 CMP     #$02
                 BEQ     BADMOD
-
                 CMP     #$05
                 BEQ     BADMOD
-
                 BRA     SETMOD
 
 .SETKEY         AND     #$DF
-                CMP     #$44
+                CMP     "D"
                 BEQ     SETTUT
-
-                CMP     #$4B
+                CMP     "K"
                 BNE     BADMOD
-
                 LDA     #$02
                 BRA     SETMOD
 
@@ -6584,22 +6532,20 @@ STRMEX = STATSI+1
                 LDA     MODETB,Y
                 PHA
                 JSR     memstate
-
-                LDA     #$82
-                JSR     OSBYTE
-
+                LDA     #$82 
+                JSR     OSBYTE     ; Read High Order Address
                 INX
                 BNE     inTUBE
-
                 INY
                 BNE     inTUBE
-
                 PLA
                 PHA
                 ORA     #$80
                 TAX
                 LDA     #$85
-                JSR     OSBYTE
+                JSR     OSBYTE     ; Read base of display RAM for mode 
+                                   ; entry x = mode
+                                   ; exit x,y point to first byte of screen memory for mode
 
                 CPX     GS
                 TYA
@@ -6612,23 +6558,18 @@ STRMEX = STATSI+1
                 PLA
                 ORA     options
                 JSR     domode
-
                 JSR     EDITmd
 
 .OLDTEXT        LDA     oldsta+3
-                CMP     PAJEd
+                CMP     PAJE + 1
                 BCC     NOOLD
-
                 CMP     HYMEM+1
                 BCS     NOOLD
-
                 CMP     oldsta+1
                 BCC     NOOLD
-
                 LDA     oldsta+1
-                CMP     PAJEd
+                CMP     PAJE + 1
                 BCC     NOOLD
-
                 LDA     oldsta
                 STA     ARGP
                 LDA     oldsta+1
@@ -6641,7 +6582,6 @@ STRMEX = STATSI+1
                 SBC     ARGP+1
                 TAY
                 BCC     NOOLD
-
                 LDA     tstart
                 STA     VARP
                 LDA     tstart+1
@@ -6664,35 +6604,31 @@ STRMEX = STATSI+1
 
                 BRK
                 EQUB    $02
-
                 EQUS    "No room"
 
 .NOOLD          BRK
                 EQUB    $02
-
                 EQUS    "No old text found"
-
                 EQUB    $00
 
 .GETNUB         STZ     INDEX
                 STZ     LINE
                 STZ     LINE+1
+
 .EDLIRE         LDY     INDEX
                 LDA     (TEMP),Y
-                CMP     #$0D
+                CMP     cr
                 BEQ     EDLIMV
-
-                CMP     #$3A
+                CMP     #$3A         ; "9" + 1
                 BCS     EDLIBN
-
-                SBC     #$2F
+                SBC     #$2F         ; "0" - 1 
                 BCC     EDLIBN
-
                 STA     ATEMP
-                LDA     #$0A
+                LDA     #$0A         ; line = line * 10 + atemp
                 LDX     #$00
                 LDY     #$00
                 CLC
+
 .EDLI10         PHA
                 TXA
                 ADC     LINE
@@ -6701,16 +6637,13 @@ STRMEX = STATSI+1
                 ADC     LINE+1
                 TAY
                 BCS     EDLIBN
-
                 PLA
                 DEC     A
                 BNE     EDLI10
-
                 TXA
                 ADC     ATEMP
                 STA     LINE
                 BCC     EDLNHI
-
                 INY
                 BEQ     EDLIBN
 
@@ -6720,7 +6653,7 @@ STRMEX = STATSI+1
 
 .EDLIMV         RTS
 
-.EDITLI         LDA     #$01
+.EDITLI         LDA     #$01        ; Move to specified line number.
                 STA     LINE
                 STZ     LINE+1
                 LDA     tstart
@@ -6730,55 +6663,43 @@ STRMEX = STATSI+1
 .LOKLINE        LDA     (STRING)
                 CMP     termin
                 BNE     LOKLI2
-
                 INC     LINE
                 BNE     LOKLI2
-
                 INC     LINE+1
+
 .LOKLI2         INC     STRING
                 BNE     LOKLI3
-
                 INC     STRING+1
+
 .LOKLI3         LDA     STRING
                 CMP     GS
                 LDA     STRING+1
                 SBC     GS+1
                 BCC     LOKLINE
-
                 JSR     prompt
-
                 EQUS    "At line "
-
                 EQUB    $EA
-
+                
 .LB533          JSR     WRITELINE
-
                 JSR     VSTRNG
-
                 EQUS    ", new line:"
-
                 EQUB    $EA
 
 .LB545          JSR     stopin
-
                 JSR     READNS
-
                 BNE     LOLI4
 
 .EDLIBN         BRK
                 EQUB    $01
-
                 EQUS    "Bad number"
 
 .EDLIBL         BRK
                 EQUB    $02
-
                 EQUS    "Line not found"
-
                 EQUB    $00
 
 .LOLI4          JSR     GETNUB
-
+                ; Number is held in line. Numbers start at 1 ...
                 SEC
                 LDA     LINE
                 SBC     #$01
@@ -6787,10 +6708,8 @@ STRMEX = STATSI+1
                 SBC     #$00
                 STA     LINE+1
                 BCC     EDLIBN
-
                 JSR     STFILE
-
-                JSR     LA96C
+                JSR     MovWrdGEtoTP
 
 .EDLIFW         LDA     LINE
                 ORA     LINE+1
@@ -6798,145 +6717,173 @@ STRMEX = STATSI+1
 
 .EDLICR         LDA     #$01
                 JSR     TPFWDA
-
                 BCS     EDLIBL
-
                 LDA     ATEMP
                 CMP     termin
                 BNE     EDLICR
-
                 LDA     LINE
                 BNE     EDLNHD
-
                 DEC     LINE+1
+
 .EDLNHD         DEC     LINE
                 BRA     EDLIFW
 
-.EDLIGO         LDA     TSM
+.EDLIGO         
+                ; Move to BSM.
+                LDA     TSM
                 BNE     EDLIGJ
-
                 LDA     #$04
+
 .EDLIGJ         STA     SCRNY
                 JMP     GPFDTP
 
-.FRSTRINIT      STZ     BOLDRQ
+
+        ; Find replace section -> EDIT07
+        ; Use recursive descent to check syntax ; 
+        ; F_str ::= find_part CR
+        ; find_part ::= { ['*'] (simple_item | set_item) }
+        ; set_item  ::= ['~'] ( '[' simple_item { simple_item } ']' )
+        ; simple_item ::= ['~'] ( character_specifier | subrange_specifier |
+        ;                         wildcard_specifier )
+        ; character_specifier ::= ['|!'] (non_meta | '\' non_eoln
+        ;                                               | '$' | '|' non_eoln)
+        ; subrange_specifier ::= character_specifier '-' character_specifier
+        ; wildcard_specifier ::= '.' | '@' | '#'
+        ; R_str ::= find_part '/' repl_part CR
+        ; repl_part ::= { ( field_item | character_specifier ) }
+        ; field_item ::= '&' | '%' digit
+        ; non_meta ::= NOT < ~ * [ ] , \ $ | - . @ # & % / eoln >
+        ; Subranges should translate into subrange_sym <ch> <ch>
+        ; Set constructs should translate into :
+        ; set_sym <nextX> ... <next item>
+        ;                     ^
+        ;                     nextX
+        ; Matching of subranges & sets should be internal to compmobj. nextX is
+        ; used to step on to the next find item after successfully matching one
+        ; of the set alternatives (set match fails when hit tes_sym).
+
+.FRSTRINIT      
+                ; Exit  -  Y = 0
+                STZ     OUTINDEX    ; OutINDEX (BOLDRQ)
                 STZ     REPLFLAG
-                STZ     LINEOT
-                STZ     UNDRRQ
+                STZ     FIELDINDEX  ; FIELDINDEX(LINEOT)
+                STZ     MMX         ; MMX (UNDRRQ);
                 STZ     OFFSET
                 STZ     SENSFLAG
-.MININIT        STZ     CTLCHA
+
+.MININIT        STZ     INPINDEX     ; INPINDEX (CTLCHA);
                 BRA     NEXTCH
 
 .GENNEXTCH      JSR     GENBYTE
 
-.NEXTCH         LDY     CTLCHA
+.NEXTCH         
+                ; A,atemp = linbuf, inpindex +  + . Exit = Z = (A = CR)
+                LDY     INPINDEX  ; INPINDEX (CTLCHA)
                 LDA     LINBUFF,Y
                 STA     ATEMP
-                INC     CTLCHA
-                CMP     #$0D
+                INC     INPUINDEX ; INPINDEX (CTLCHA)
+                CMP     cr
                 RTS
+		       ; Translate & store FR string into stracc.
+		       ; Exit  - Find part translated into stracc, replindex holds start of
+		       ;        replace string (when translated) in stracc. 
+		       ;      - fieldindex = No. of fields (max 10) in find string.
+		       ;      - For each field n (n> 0) -
+		       ;        'mulf' (* ..)  -  fieldmmxtab,n = (mmx :OR: &80)
+		       ;        'conf' (?)     -  fieldmmxtab,n = mmx of previous mulf
+		       ;                          fieldofftab,n = offset from above
+		       ;      - replindex = stracc index of replace part (when translated)
+		       ;      - replflag = 0  No replace part supplied
+		       ;                   1  Replace part supplied
 
 .FINDTRANS      JSR     FRSTRINIT
 
-.FINDPART       STZ     mark_count
-                STZ     METAFLAG
-                STZ     BUTTFLAG
+.FINDPART       STZ     MULFFLAG  ; MULFFLAG (mark_count);
+                                  ; Don't you know whether next object is either a 
+                STZ     METAFLAG  ; star or wildcard field.
+                STZ     BUTTFLAG  ; or ^
                 LDA     ATEMP
-                CMP     #$0D
+                CMP     cr
                 BEQ     FIPAEXIT
-
-                CMP     #$2F
+                CMP     "/"
                 BEQ     FIPAEND
-
-                CMP     #$5E
+                CMP     "^"
                 BNE     FIPANHA
-
                 INC     BUTTFLAG
                 BRA     FIPAMUL
 
-.FIPANHA        CMP     #$2A
+.FIPANHA        CMP     "*"
                 BNE     FIPANMUL
 
-.FIPAMUL        INC     mark_count
-                LDX     #$80
+.FIPAMUL        INC     MULFFLAG   ; MULFFLAG (mark_count);
+                LDX     MULTSYM    ; MULTSYM (#$80)
                 JSR     GENNEXTCH
 
-.FIPANMUL       CMP     #$7E
+.FIPANMUL       CMP     "~"
                 BNE     FIPANNOT
 
-                LDX     #$81
+                LDX     NOTSYM     ; NOTSYM (#$81)
                 JSR     GENNEXTCH
 
-.FIPANNOT       CMP     #$5B
+.FIPANNOT       CMP     "["
                 BNE     FIPASIMP
-
                 INC     SENSFLAG
-                LDX     #$86
+                LDX     SETSYM    ; SETSYM (#$86)
                 JSR     GENBYTE
-
-                JSR     GENBYTE
-
-                STY     LASTTAB
+                JSR     GENBYTE   ; Leave room for nextX, and remember position.
+                STY     NEXTX     ; NEXTX (LASTTAB)
                 JSR     NEXTCH
 
 .FIPASELT       JSR     SIMPLEITEM
-
                 LDA     ATEMP
-                CMP     #$5D
+                CMP     "]"
                 BNE     FIPASELT
-
                 DEC     SENSFLAG
-                LDA     BOLDRQ
-                LDY     LASTTAB
+                LDA     OUTINDEX ; OUTINDEX (BOLDRQ)
+                                 ; End of set construct. Store nextx
+                LDY     NEXTX    ; NEXTX (LASTTAB)
                 STA     stracc,Y
                 JSR     NEXTCH
-
                 BRA     FIFIFEEL
 
 .FIPAEND        INC     REPLFLAG
 .FIPAEXIT       JSR     TERMGEN
-
                 JSR     NEXTCH
-
-                LDA     BOLDRQ
-                STA     TINDEN
+                LDA     OUTINDEX ; OUTINDEX (BOLDRQ)
+                STA     REPLINDEX ; REPLINDEX (TINDEN)
                 LDA     REPLFLAG
                 BNE     REPLPART
-
                 RTS
 
 .FIPASIMP       JSR     SIMPLEITEM
 
-.FIFIFEEL       LDA     BUTTFLAG
+.FIFIFEEL       
+                ; If last object was a field of some sort, then store the 
+                ; relevant info, and update indeces as required.
+                LDA     BUTTFLAG
                 BEQ     FIFICO
-
-                LDX     #$8B
+                LDX     BUTTSYM   ; BUTTSYM (#$8B)
                 JSR     GENBYTE
 
 .FIFICO         LDA     METAFLAG
-                BEQ     FIFIOFFI
-
-                LDX     LINEOT
+                BEQ     FIFIOFFI ; No meta-chars => not a field
+                LDX     FIELDINDEX ; FIELDINDEX (LINEOT)
                 CPX     #$0A
-                BCS     FINDPART
-
-                INC     LINEOT
+                BCS     FINDPART   ; That's enough fields.
+                INC     FIELDINDEX ; FIELDINDEX (LINEOT)
                 LDA     OFFSET
                 STA     FIELDOFFTAB,X
-                LDA     mark_count
+                LDA     MULFFLAG   ; MULFFLAG (mark_count)
                 BNE     FIFIMULF
-
-                LDA     UNDRRQ
+                LDA     MMX        ; MMX (UNDRRQ)
                 STA     FIELDMMXTAB,X
 .FIFIOFFI       INC     OFFSET
 .FINDPCH        JMP     FINDPART
 
-.FIFIMULF       INC     UNDRRQ
-                LDA     UNDRRQ
+.FIFIMULF       INC     MMX         ; MMX (UNDRRQ)
+                LDA     MMX         ; MMX (UNDRRQ)
                 CMP     #$05
                 BCS     FRSTERR
-
                 ORA     #$80
                 STA     FIELDMMXTAB,X
                 STZ     OFFSET
@@ -6944,9 +6891,7 @@ STRMEX = STATSI+1
 
 .FRSTERR        BRK
                 EQUB    $01
-
                 EQUS    "Too many find multiples"
-
                 EQUB    $00
 
 .REPANXCH       JSR     NEXTCH
@@ -6955,264 +6900,234 @@ STRMEX = STATSI+1
 
 .REPLPART       LDA     #$FF
                 STA     SENSFLAG
-                LDA     ATEMP
-                CMP     #$0D
+                LDA     ATEMP  ; Translate replace part of FR string.
+                CMP     cr
                 BEQ     TERMGEN
-
-                LDX     #$88
-                CMP     #$26
+                LDX     FOUNDSYM  ; FOUNDSYM (#$88)
+                CMP     "&"
                 BEQ     REPANXCH
-
-                CMP     #$5C
+                CMP     "\"
                 BNE     REPANS
-
                 JSR     NEXTCH
-
                 TAX
                 BRA     REPANXCH
 
-.REPANS         LDX     #$87
-                CMP     #$25
+.REPANS         LDX     FIELDSYM   ; FIELDSYM (#$87)
+                CMP     "%"
                 BNE     RPNFLD
-
                 JSR     GENBYTE
-
                 JSR     NEXTCH
-
                 SEC
-                SBC     #$30
+                SBC     "0"
                 BCC     FIELDERR
-
-                CMP     LINEOT
+                CMP     FIELDINDEX  ; FIELDINDEX (LINEOT)
                 BCS     FIELDERR
-
                 TAX
                 BPL     REPANXCH
 
 .RPNFLD         JSR     CHARACTERSPECI
-
-                STX     PBOLD
+                STX     SIMPCHAR    ; SIMPCHAR (PBOLD)
                 TXA
                 BPL     REPAGENB
-
-                LDX     #$89
+                LDX     ESCSYM      ; ESCSYM (#$89)
                 JSR     GENBYTE
-
-                LDX     PBOLD
+                LDX     SIMPCHAR    ; SIMPCHAR (PBOLD)
                 BRA     REPAGENB
 
 .FIELDERR       BRK
                 EQUB    $01
-
                 EQUS    "Bad replace field number"
-
                 EQUB    $00
 
-.TERMGEN        LDX     #$8C
-.GENBYTE        LDY     BOLDRQ
+.TERMGEN        LDX     TERMSYM  ; Generate termsym.  TERMSYM (#$8C)
+.GENBYTE        
+                ; stracc, outindes + + = X
+                ; Exit - metaflag set (incremented) if meta-character (field) generated.
+                
+                LDY     OUTINDEX     ; OUTINDEX (BOLDRQ)
                 LDA     SENSFLAG
                 BNE     GENBSNS
-
-                CPX     #$41
+                CPX     "A"
                 BCC     GENBSNS
-
-                CPX     #$7B
+                CPX     #$7B         ; "z" + 1
                 BCS     GENBSNS
-
-                CPX     #$5B
+                CPX     #$5B         ; "Z" + 1
                 BCC     GENBNSN
-
-                CPX     #$61
+                CPX     "a"
                 BCC     GENBSNS
 
 .GENBNSN        TXA
                 ORA     #$20
                 TAX
-                LDA     #$8A
+                LDA     NSENSYM      ; NSENSYM (#$8A)
                 STA     stracc,Y
                 INY
-                INC     BOLDRQ
+                INC     OUTINDEX     ; OUTINDEX (BOLDRQ)
                 BEQ     GENBERR
 
 .GENBSNS        TXA
                 STA     stracc,Y
                 BPL     GENBNMET
-
                 INC     METAFLAG
-.GENBNMET       INC     BOLDRQ
-                BEQ     GENBERR
 
+.GENBNMET       INC     OUTINDEX       ; OUTINDEX (BOLDRQ)
+                BEQ     GENBERR
                 RTS
 
 .GENBERR        BRK
                 EQUB    $01
-
                 EQUS    "Syntax incorrect"
-
                 EQUB    $00
 
 .SIMPLEITEM     LDA     ATEMP
-                CMP     #$7E
+                CMP     "~"
                 BNE     SIITNNOT
-
-                LDX     #$81
+                LDX     NOTSYM         ; NOTSYM (#$81)
                 JSR     GENBYTE
-
                 JSR     NEXTCH
-
                 BNE     SIITNNOT
 
                 BRK
                 EQUB    $01
-
                 EQUS    "Error with ~"
-
                 EQUB    $00
 
-.SIITNNOT       CMP     #$5C
+.SIITNNOT       CMP     "\"
                 BNE     SIITNS
-
                 INC     SENSFLAG
                 JSR     NEXTCH
-
                 BNE     SIITNM
 
                 BRK
                 EQUB    $01
-
                 EQUS    "Error with \"
-
                 EQUB    $00
 
 .SIITNM         TAX
                 JSR     NEXTCH
-
                 JSR     GENBYTE
-
                 DEC     SENSFLAG
                 RTS
 
-.SIITNS         LDX     #$82
-                CMP     #$2E
+.SIITNS         LDX     WILDSYM         ; WILDSYM (#$82)
+                CMP     "."
                 BEQ     SIITWILD
-
-                LDX     #$83
-                CMP     #$40
+                LDX     ALPHASYM        ; ALPHASYM (#$83) 
+                CMP     "@"
                 BEQ     SIITWILD
-
-                LDX     #$84
-                CMP     #$23
+                LDX     DIGSYM          ; DIGSYM (#$84)
+                CMP     "#"
                 BNE     SIITNWIL
 
-.SIITWILD       JSR     NEXTCH
-
+.SIITWILD       JSR     NEXTCH          ; Preserves X
                 JMP     GENBYTE
 
 .SIITNWIL       JSR     CHARACTERSPECI
-
-                STX     PBOLD
+                STX     SIMPCHAR        ; SIMPCHAR (PBOLD)
                 LDA     ATEMP
-                CMP     #$2D
+                CMP     "-"
                 BNE     SIITCGEN
-
                 INC     SENSFLAG
-                LDX     #$85
+                LDX     SUBRSYM         ; SUMRSYM (#$85)
                 JSR     GENBYTE
-
                 JSR     NEXTCH
-
-                LDX     PBOLD
+                LDX     SIMPCHAR        ; SIMPCHAR (PBOLD)
                 JSR     GENBYTE
-
                 JSR     CHARACTERSPECI
-
                 JSR     GENBYTE
-
                 DEC     SENSFLAG
                 RTS
 
-.SIITCGEN       TXA
+.SIITCGEN       
+                ; Output character as escsym ch if >= &80
+                TXA
                 BPL     GENBYJ
-
-                LDX     #$89
+                LDX     escsym
                 JSR     GENBYTE
-
-                LDX     PBOLD
+                LDX     SIMPCHAR       ; SIMPCHAR PBOLD
 .GENBYJ         JMP     GENBYTE
 
-.CHARACTERSPECI STZ     COUNT
+.CHARACTERSPECI 
+                ; Exit - X = Character
+                STZ     COUNT ; Add 128 count
                 LDA     ATEMP
                 BMI     CHSPBY
-
-                CMP     #$7C
+                CMP     "|"
                 BNE     CHRSCO
-
                 JSR     NEXTCH
-
                 BEQ     CHRSER
-
-                CMP     #$21
+                CMP     "!"
                 BNE     CHRSSO
-
                 INC     COUNT
                 JSR     NEXTCH
 
-.CHRSCO         CMP     #$24
+.CHRSCO         CMP     "$"
                 BEQ     CHSPCR
-
-                CMP     #$7C
+                CMP     "|"
                 BNE     CHSPBY
-
                 JSR     NEXTCH
-
                 BEQ     CHRSER
 
-.CHRSSO         CMP     #$3F
+.CHRSSO         CMP     "?"
                 BNE     NOTQUE
-
                 LDA     #$7F
                 BRA     CHSPBY
 
 .NOTQUE         BCC     CHSPBY
-
                 AND     #$DF
-                SBC     #$40
+                SBC     "@"
                 BRA     CHSPBY
 
 .CHSPCR         LDA     termin
 .CHSPBY         PHA
                 JSR     NEXTCH
-
                 PLA
                 LDY     COUNT
                 BEQ     CHRSEX
-
                 ORA     #$80
 .CHRSEX         TAX
                 RTS
 
 .CHRSER         BRK
                 EQUB    $01
-
                 EQUS    "Error with |"
-
                 EQUB    $00
+        ; Search subroutine , called by find & replace routines.
+        ; 'Multiple occurence' matching is achieved by a general backtracking
+        ; algorithm, using a stack of records, one for each '*-match', holding
+        ; the following data -
+        ;  + - + 
+        ; |0| linbufX of multsym concerned
+        ;  + - + 
+        ; |1| lo }
+        ;  + - +     } Text address of match start
+        ; |2| hi }
+        ;  + - + 
+        ; |3| lo }
+        ;  + - +     } Number of object accepted by match
+        ; |4| hi }
+        ;  + - + 
+        ; The first record is reserved (by chknrep) for match-start pointer.
+        ; Entry - MS   --> Search start position
+        ;        EOSP    --> Top bit set charcater at required end of search.
+        ;        Search-string in stracc, terminated by termch.
+        ; Exit  - CC  Occurence of findstring found.
+        ;            MS  --> match
+        ;            ME  --> matchend  +  1
+        ;        CS  Search failed.
 
 .SEARCH         LDY     #$00
-                STZ     FILL
-                LDA     XEFF
-                STA     DIFF
+                STZ     SSTCKX             ; SSTCKX (FILL)
+                LDA     MS                 ; MS (XEFF)
+                STA     ME                 ; ME (DIFF)
                 CMP     TEXTP
-                LDA     LASTSP
-                STA     CENTRE
+                LDA     MS + 1             ; MS + 1 (LASTSP)
+                STA     ME + 1             ; ME + 1 (CENTRE)
                 SBC     TEXTP+1
                 BCC     SRCHCT
-
                 LDA     TEXPFLAG
                 BNE     SRCHFL
-
                 JSR     MvetoFoundPos
-
                 LDA     GS
                 STA     STRING
                 LDA     GS+1
@@ -7228,74 +7143,75 @@ STRMEX = STATSI+1
 .SRCHFL         SEC
                 RTS
 
-.SRCHL1         INC     DIFF
+.SRCHL1         INC     ME              ; ME (DIFF)
                 BNE     SRCHCT
+                INC     ME + 1          ; ME + 1 (CENTRE)
 
-                INC     CENTRE
-.SRCHCT         JSR     escTST
-
+.SRCHCT         
+                ; Expects Y (= linbufX), ME --> Next char valid.
+                JSR     escTST
                 LDA     stracc,Y
-                CMP     #$8C
+                CMP     TERMSYM    ; TERMSYM (#$8C)
                 BEQ     SRCHFD
-
-                CMP     #$80
+                CMP     MULTSYM    ; MULTSYM (#$80)
                 BEQ     SRCHMI
-
                 JSR     COMPMOBJ
-
                 BEQ     SRCHL1
 
-.SRCHIM         LDX     FILL
+.SRCHIM         
+                ; Increment current multiple match, or advance MS if there
+                ; isn't one. Search fales when MS reaches EOT.
+                LDX     SSTCKX     ; SSTCKX (FILL)
                 BNE     SRCHFM
-
-                INC     XEFF
+                INC     MS         ; MS (XEFF)
                 BNE     SEARCH
-
-                INC     LASTSP
+                INC     MS + 1     ; MS + 1 (LASTSP)
                 BRA     SEARCH
 
-.SRCHFD         LDA     XEFF
+.SRCHFD         LDA     MS         ; Match found. Set sstk[0] = MS. (ME - MS) ; MS (XEFF)
                 STA     SSTTLOSTK
-                LDA     LASTSP
+                LDA     MS + 1     ; MS + 1 (LASTSP);
                 STA     SSTTHISTK
                 SEC
-                LDA     DIFF
-                SBC     XEFF
+                LDA     ME         ; ME (DIFF)
+                SBC     MS         ; MS (XEFF)
                 STA     SCNTLOSTK
-                LDA     CENTRE
-                SBC     LASTSP
+                LDA     ME + 1     ; ME + 1 (CENTRE)
+                SBC     MS + 1     ; MS + 1 (LASTSP)
                 STA     SCNTHISTK
                 CLC
                 RTS
 
-.SRCHFM         STY     BUTTFLAG
+.SRCHFM         
+                ; Let most recent multiple match accept another occurence of 
+                ; find-object if one exists.
+                STY     BUTTFLAG
                 CLC
                 LDA     SSTTLOSTK,X
                 ADC     SCNTLOSTK,X
-                STA     DIFF
+                STA     ME           ; ME (DIFF)
                 LDA     SSTTHISTK,X
                 ADC     SCNTHISTK,X
-                STA     CENTRE
+                STA     ME + 1       ; ME + 1 (CENTRE)
                 LDA     sindexstk,X
                 TAY
                 JSR     COMPMOBJ
-
                 BNE     SRCHBK
-
-                LDX     FILL
+                LDX     SSTCKX       ; SSTCKX (FILL)
                 INC     SCNTLOSTK,X
                 BNE     SRCHL1
-
                 INC     SCNTHISTK,X
                 BRA     SRCHL1
 
-.SRCHBK         LDX     BUTTFLAG
+.SRCHBK         
+                ; Can't increment this mutiple-match, so backtrack to the previous one.
+                ; unless its hit a ^ with count>0 in which case it continues
+                LDX     BUTTFLAG
                 LDA     STRACC-1,X
-                CMP     #$8B
+                CMP     BUTTSYM      ; BUTTSYM (#$8B)
                 BNE     SRCHBC
-
                 INY
-                LDX     FILL
+                LDX     SSTCKX       ; SSTCKX (FILL)
                 LDA     SCNTLOSTK,X
                 ORA     SCNTHISTK,X
                 BNE     SRCHCT
@@ -7303,177 +7219,174 @@ STRMEX = STATSI+1
 .SRCHBC         DEC     FILL
                 BRA     SRCHIM
 
-.SRCHMI         INC     FILL
-                LDX     FILL
+.SRCHMI         
+                ; 'Push' a new record onto backtrack-stack. Initially accept
+                ; 0 characters into multiple match.
+                INC     SSTCKX       ; SSTCKX (FILL)
+                LDX     SSTCKX       ; SSTCKX (FILL)
                 INY
                 TYA
                 STA     sindexstk,X
-                LDA     DIFF
+                LDA     ME           ; ME (DIFF)
                 STA     SSTTLOSTK,X
-                LDA     CENTRE
+                LDA     ME + 1       ; ME + 1 (CENTRE)
                 STA     SSTTHISTK,X
                 STZ     SCNTLOSTK,X
                 STZ     SCNTHISTK,X
-                JSR     COMPMOBJ
-
+                JSR     COMPMOBJ  ; Cheap way to advance Y to next find-object.
                 JMP     SRCHCT
 
 .COMDFS         PLP
-.COMDFL         LDA     #$01
+.COMDFL         
+                ; Have hit end of search text, so fail match.
+                LDA     #$01
                 RTS
 
-.COMPMOBJ       LDA     DIFF
+.COMPMOBJ       
+                ; Compares stracc,Y & (ME).
+                ; Exit  - Y indexes next ssobj
+                ;        EQ  Objects match.
+                ;        NE  Objects don't match.
+                ; Match fails if have hit end of seach text.
+                LDA     ME          ; ME (DIFF)
                 CMP     ENDP
                 BNE     COMOCO
-
-                LDA     CENTRE
+                LDA     ME + 1      ; ME + 1 (CENTRE)
                 CMP     ENDP+1
                 BEQ     COMDFL
 
-.COMOCO         LDA     stracc,Y
-                CMP     #$81
+.COMOCO         
+
+                ; Check for & store absence/presence of notsym, then branch depending
+                ; whether trying to match constant, wildcard, subrange or set item.
+                LDA     stracc,Y
+                CMP     NOTSYM      ; NOTSYM (#$81)
                 PHP
                 BNE     COMONN
-
                 INY
+
 .COMONN         INY
                 LDA     STRACC-1,Y
                 BMI     COMOME
-
-                CMP     (DIFF)
+                CMP     (ME)        ; DIFF (ME)
                 BNE     CMOPRN
-
                 BRA     CMOPRY
 
-.COMOME         CMP     #$82
+.COMOME         CMP     WILDSYM     ; WILDSYM (#$82)
                 BEQ     CMOPRY
-
-                CMP     #$8A
+                CMP     NSENSYM     ; NSENSYM (#$8A)
                 BEQ     CMONSEN
-
-                CMP     #$83
+                CMP     ALPHASYM    ; ALPHASYM (#$83)
                 BEQ     COMOAL
-
-                CMP     #$8B
+                CMP     BUTTSYM     ; BUTTSYM (#$8B)
                 BEQ     COMDFS
-
-                CMP     #$84
+                CMP     DIGSYM      ; DIGSYM (#$84)
                 BEQ     CMODG1
-
-                CMP     #$85
+                CMP     SUBRSYM     ; SUBRSYM (#$85)
                 BEQ     CMOSUB
-
+                ;
+                ; Must be escsym ch
+                ;
                 CMP     #$86
                 BEQ     CMOSET
 
                 INY
                 LDA     STRACC-1,Y
-                CMP     (DIFF)
+                CMP     (ME)        ; DIFF (ME)
                 BNE     CMOPRN
-
                 BEQ     CMOPRY
 
 .CMOSUB         INY
                 INY
-                LDA     (DIFF)
+                LDA     (ME)       ; DIFF (ME)
                 CMP     STRACC-2,Y
                 BCC     CMOPRN
-
                 CMP     STRACC-1,Y
                 BCC     CMOPRY
-
                 BNE     CMOPRN
-
                 BRA     CMOPRY
 
 .CMONSEN        INY
-                LDA     (DIFF)
+                LDA     (ME)
                 ORA     #$20
                 CMP     STRACC-1,Y
                 BNE     CMOPRN
-
                 BRA     CMOPRY
 
-.COMOAL         LDA     (DIFF)
-                CMP     #$5F
+.COMOAL         LDA     (ME)
+                CMP     "_"
                 BEQ     CMOPRY
-
-                CMP     #$41
+                CMP     "A"
                 BCC     CMODG2
-
-                CMP     #$7B
+                CMP     "z" + 1
                 BCS     CMOPRN
-
-                CMP     #$5B
+                CMP     "Z" + 1
                 BCC     CMOPRY
-
-                CMP     #$61
+                CMP     "a"
                 BCC     CMOPRN
-
                 BRA     CMOPRY
 
-.CMODG1         LDA     (DIFF)
-.CMODG2         CMP     #$30
+.CMODG1         LDA     (ME)
+.CMODG2         CMP     "0"
                 BCC     CMOPRN
-
-                CMP     #$3A
+                CMP     #$3A          ; "9" + 1
                 BCS     CMOPRN
-
                 BRA     CMOPRY
 
 .CMOSET         LDA     stracc,Y
-                STA     LASTTAB
+                STA     NEXTX          ; NEXTX (LASTTAB)
                 INY
 .CMOSEL         JSR     COMPMOBJ
-
                 BEQ     CMOSEY
-
-                CPY     LASTTAB
+                CPY     NEXTX
                 BNE     CMOSEL
 
 .CMOPRN         PLP
                 RTS
 
-.CMOSEY         LDY     LASTTAB
+.CMOSEY         LDY     NEXTX
 .CMOPRY         PLA
                 AND     #$02
                 RTS
 
-.CHKNREP        JSR     MvetoFoundPos
-
+.CHKNREP        
+                ; Check for size, then replace found string with replace string.
+                ; Entry - Match just found; s*****stk[0] set up for %0 ('&')
+                ;        replindex = start index of replace part in stracc
+                ; Exit  - Found string replaced.
+                JSR     MvetoFoundPos
                 LDA     #$01
                 STA     MODFLG
-                LDA     DIFF
+                LDA     ME
                 STA     GE
-                LDA     CENTRE
-                STA     GE+1
-                LDA     TINDEN
+                LDA     ME + 1
+                STA     GE + 1
+                LDA     REPLINDEX   ; REPLINDEX (TINDEN)
                 STA     LNBUFX
-.CHNRLP         LDA     GS
-                CMP     XEFF
-                LDA     GS+1
-                SBC     LASTSP
-                BCS     CHNRRERR
 
+.CHNRLP         LDA     GS
+                CMP     MS
+                LDA     GS + 1
+                SBC     MS + 1
+                BCS     CHNRRERR
                 LDY     LNBUFX
                 INC     LNBUFX
                 LDA     stracc,Y
                 BPL     CHNRSI
-
-                CMP     #$8C
+                CMP     TERMSYM      ; TERMSYM (#$8C)
                 BEQ     CHNREX
-
-                CMP     #$87
+                CMP     FIELDSYM     ; FIELDSYM (#$87)
                 BEQ     CHNRFI
-
-                CMP     #$88
+                CMP     FOUNDSYM     ; FOUNDSYM (#$88)
                 BEQ     CHNRFO
-
+                ; Must be escsym ch
                 INC     LNBUFX
                 LDA     STRACC+1,Y
                 BRA     CHNRSI
 
-.CHNRFO         LDY     #$00
+.CHNRFO         
+                ; '&' has been frigged to look like MM 0
+                LDY     #$00
                 BRA     CHNRAM
 
 .CHNRFI         INC     LNBUFX
@@ -7481,10 +7394,8 @@ STRMEX = STATSI+1
                 TAX
                 LDA     FIELDMMXTAB,X
                 BMI     CHNRMF
-
                 TAY
                 BEQ     CHNRMS
-
                 CLC
                 LDA     SSTTLOSTK,Y
                 ADC     SCNTLOSTK,Y
@@ -7493,24 +7404,22 @@ STRMEX = STATSI+1
                 ADC     SCNTHISTK,Y
                 BNE     CHNRTM
 
-.CHNRMS         LDA     XEFF
+.CHNRMS         LDA     MS
                 STA     TEMP
-                LDA     LASTSP
+                LDA     MS + 1
+
 .CHNRTM         STA     TEMP+1
                 LDY     FIELDOFFTAB,X
                 LDA     (TEMP),Y
 .CHNRSI         STA     (GS)
                 INC     GS
                 BNE     CHNRLP
-
-                INC     GS+1
+                INC     GS + 1
                 BRA     CHNRLP
 
 .CHNRRERR       BRK
                 EQUB    $02
-
                 EQUS    "No room"
-
                 EQUB    $00
 
 .CHNRMF         AND     #$7F
@@ -7533,34 +7442,34 @@ STRMEX = STATSI+1
                 ADC     GS+1
                 STA     GS+1
                 JSR     COPYBK
-
                 JMP     CHNRLP
 
 .CHNREX         RTS
 
-.GETRESP        JSR     EDRDCH
+                ; Find-Replace & Global-Replace should have their own seperate command
+                ; keys, with the first delimeter 'built in' (i.e. not required), and CR
+                ; sufficing as terminator -
+                ; FR/ ....... [/.......] <CR>
+                ; GR/ .......  /.......  <CR>
 
+.GETRESP 
+                ; Exit - A holds char - forced to lower case - read from keyboard
+                JSR     EDRDCH
                 ORA     #$20
                 RTS
 
-.MvetoFoundPos  LDX     XEFF
-                LDY     LASTSP
+.MvetoFoundPos  LDX     MS
+                LDY     MS + 1
                 JMP     GPFDXY
 
 .GLOBALREP      JSR     DFINIT
-
                 JSR     prompt
-
                 EQUS    "Global replace:"
-
                 EQUB    $EA
 
 .LBA52          JSR     READLS
-
                 JSR     readIN
-
                 BNE     NEWGR
-
                 CMP     GRBUFF
                 BEQ     NOBUFF
 
@@ -7568,90 +7477,73 @@ STRMEX = STATSI+1
                 STA     (TEMP),Y
                 INY
                 BPL     OLDGR
-
                 LDY     #$00
+
 .NEWGR          LDA     (TEMP),Y
                 STA     GRBUFF,Y
                 INY
                 CPY     #$64
                 BNE     NEWGR
-
                 JSR     FINDTRANS
-
                 JSR     dfblok
-
                 STZ     LINE
                 STZ     LINE+1
                 STZ     TEXPFLAG
+
 .GREPLP         LDX     GE
                 LDY     GE+1
-.GREPNX         STX     XEFF
-                STY     LASTSP
+                
+.GREPNX         STX     MS
+                STY     MS + 1
                 JSR     SEARCH
-
                 BCS     GREPEX
-
                 INC     LINE
                 BNE     GREPNH
-
                 INC     LINE+1
+
 .GREPNH         LDA     REPLFLAG
                 BNE     GREPRP
-
-                LDX     DIFF
-                LDY     CENTRE
+                LDX     ME
+                LDY     ME + 1
                 BRA     GREPNX
 
 .GREPRP         JSR     CHKNREP
-
                 BRA     GREPLP
 
-.GREPEX         LDX     STRING
+.GREPEX         
+                ;Move cursor (as near as possible) to the place it started at, then
+                ;output match count.
+                LDX     STRING
                 LDY     STRING+1
                 JSR     GPBKXY
-
                 JSR     NORMAL
-
                 JSR     SCRNUD
-
 .LBAAE          LDX     PRMPTL
                 INX
                 JSR     PRMPTX
-
                 EQUS    " "
-
                 EQUB    $EA
 
 .LBAB7          JSR     WRITELINE
-
                 JSR     PRMPTX
-
                 EQUS    " found"
-
                 EQUB    $EA
-
 .LBAC4          RTS
 
 .NOBUFF         BRK
                 EQUB    $01
-
                 EQUS    "No previous string"
-
                 EQUB    $00
 
 .FINDREPLACE    JSR     prompt
-
                 EQUS    "Find and replace:"
-
                 EQUB    $EA
 
-.LBAEF          STZ     L0753
+.LBAEF          STZ     L0753    ; TODO find if there is a name for this
                 JSR     READLS
 
                 JSR     readIN
-
                 BNE     NEWFR
-
                 CMP     FRBUFF
                 BEQ     NOBUFF
 
@@ -7659,22 +7551,19 @@ STRMEX = STATSI+1
                 STA     (TEMP),Y
                 INY
                 BPL     OLDFR
-
                 LDY     #$00
+
 .NEWFR          LDA     (TEMP),Y
                 STA     FRBUFF,Y
                 INY
                 CPY     #$64
                 BNE     NEWFR
-
                 JSR     FINDTRANS
-
                 JSR     TEMPSX
-
                 JSR     FINEPO
-
                 LDA     LINE
                 STA     SCRNX
+                ;Set up search termination pointer & flag. 
                 LDA     TMAX
                 STA     TEXTP
                 STA     ENDP
@@ -7682,42 +7571,36 @@ STRMEX = STATSI+1
                 STA     TEXTP+1
                 STA     ENDP+1
                 STA     TEXPFLAG
+
 .IMRPRL         LDX     GE
                 LDY     GE+1
-.IMRPCL         STX     XEFF
-                STY     LASTSP
+
+.IMRPCL         STX     MS
+                STY     MS + 1
                 JSR     SEARCH
-
                 BCS     IMRPNF
-
                 JSR     MvetoFoundPos
-
                 INC     LINE
                 BNE     LBB44
 
                 INC     LINE+1
 .LBB44          LDA     L0753
                 BNE     IMRPRP
-
-                JSR     NORMAX
-
-                LDA     BSM
+                JSR     NORMAX ; get position of X back
+                LDA     BSM    ; Move to BSM
                 STA     SCRNY
                 JSR     SCRNUD
 
-                LDA     #$05
+                LDA     FULLSCREEN   ; FULLSCREEN (#$05)
                 STA     UPDATE
-                JSR     LBE3E
+                JSR     RepContPrompt
 
                 JSR     CSRSCR
-
                 JSR     CURON
 
 .IMRPPR         JSR     GETRESP
-
-                CMP     #$65
+                CMP     "c"
                 BNE     IMRPNC
-
                 STA     L0753
                 LDA     #$01
                 STA     LINE
@@ -7727,66 +7610,55 @@ STRMEX = STATSI+1
                 LDA     REPLFLAG
                 BNE     LBB7C
 
-                JSR     LBE79
+                JSR     ReplPrompt
 
                 INC     REPLFLAG
 .LBB7C          JMP     IMRPRP
 
-.IMRPNC         CMP     #$63
+.IMRPNC         CMP     "r"
                 BNE     LBB89
-
-                LDX     DIFF
-                LDY     CENTRE
+                LDX     ME
+                LDY     ME + 1
                 BRA     IMRPCL
 
 .LBB89          CMP     #$72
                 BNE     IMRPPR
-
                 JSR     MKREFUSE
+                ; Either use supplied replace part, or prompt for one.
 
                 LDA     REPLFLAG
                 BNE     IMRPRP
-
-                JSR     LBE79
+                JSR     ReplPrompt
 
 .IMRPRP         JSR     CHKNREP
-
                 JMP     IMRPRL
 
 .IMRPNF         JSR     NORMAL
-
-                LDA     #$06
+                LDA     THELOT       ; THELOT (#$06)
                 STA     UPDATE
                 JSR     SCRNUD
-
                 JSR     STATUS
-
                 LDA     L0753
-                BEQ     LBBB2
-
+                BEQ     NotFoundPrompt
                 JMP     LBAAE
 
-.LBBB2          LDX     PRMPTL
+.NotFoundPrompt LDX     PRMPTL
                 INX
                 JSR     PRMPTX
-
                 EQUS    " Not found"
-
                 EQUB    $EA,$60
 
 .WRITELINE      JSR     startI
-
                 LDX     #$04
                 STX     STRING
 .WOPRNEXT       STZ     STRING+1
 .WOPRLOOP       SEC
                 LDA     LINE
-                SBC     LBBF7,X
+                SBC     WOPTBL,X
                 TAY
                 LDA     LINE+1
-                SBC     LBBFC,X
+                SBC     WOPTBH,X
                 BCC     WOPRDIGI
-
                 STY     LINE
                 STA     LINE+1
                 INC     STRING+1
@@ -7807,17 +7679,36 @@ STRMEX = STATSI+1
 
                 RTS
 
-.LBBF7          EQUB    $01,$0A,$64,$E8,$10
+.WOPTBL         EQUB    $01,$0A,$64,$E8,$10
+;               = :LSB: 1
+;               = :LSB: 10
+;               = :LSB: 100
+;               = :LSB: 1000
+;               = :LSB: 10000
 
-.LBBFC          EQUB    $00,$00,$00,$03,$27
+.WOPTBH         EQUB    $00,$00,$00,$03,$27
+;               = :MSB: 1
+;               = :MSB: 10
+;               = :MSB: 100
+;               = :MSB: 1000
+;               = :MSB: 10000
 
-.MARKUPDATE     JSR     MKUDCH
+                ;Marks are stored in SMATlo,hi (Set Mark Address Table), where the
+                ;addresses refer to positions in the 2nd half of text; when updated
+                ;(any number of times), this address is translated into a value in
+                ;UMATlo,hi (Used Mark Address Table), where the addresses refer to
+                ;positions in the text as it is currently partitioned.
+
+.MARKUPDATE         
+                ;Update marks for current position of gap. 
+                ;Exit - marksbeforecst =    No. of marks before GE.
+                JSR     MKUDCH
 
 .MKUDKN         STZ     MARKSB
                 LDX     MARKX
+
 .MKUDLP         DEX
                 BMI     MKUDEX
-
                 LDY     SMATLO,X
                 STY     UMATLO,X
                 CPY     GE
@@ -7825,44 +7716,50 @@ STRMEX = STATSI+1
                 STA     UMATHI,X
                 SBC     GE+1
                 BCS     MKUDLP
-
                 INC     MARKSB
                 SEC
                 TYA
-                SBC     JUSLEN
+                SBC     CHUNKS      ; CHUNKS (JUSLEN)
                 STA     UMATLO,X
                 LDA     UMATHI,X
-                SBC     SPACES
+                SBC     CHUNKS + 1
                 STA     UMATHI,X
                 BCS     MKUDLP
 
 .MKUDEX         RTS
 
-.MKUDCH         SEC
+.MKUDCH         
+                ;chunksize :=  size of gap to correct for.
+                SEC
                 LDA     GE
                 SBC     GS
-                STA     JUSLEN
+                STA     CHUNKS
                 LDA     GE+1
                 SBC     GS+1
-                STA     SPACES
+                STA     CHUNKS + 1
                 RTS
 
-.CLRMAK         JSR     FINEPO
-
+.CLRMAK         
+                ;Clear, count update & order mark(s), ready for use.
+                ;Entry - Mark1 (markstk) and/or Mark2 (markstk+2) possibly set.
+                ;Exit  - Gap finepositioned
+                ;        Marks ordered so that Mark1 <=       Mark2
+                ;        Marks cleared & status updated
+                ;        A[Z] =       nummarks =       No. of marks
+                ;Save (GE - GS) for updating marks, then finepositiongap
+                JSR     FINEPO
                 JSR     MKUDCH
-
                 JSR     MKUDKN
 
+                ;If Mark2 (exists) < Mark1, then swap. 
                 LDX     MARKX
                 CPX     #$02
                 BNE     CLRMCO
-
                 LDA     UMATLO+1
                 CMP     UMATLO
                 LDA     UMATHI+1
                 SBC     UMATHI
                 BCS     CLRMCO
-
                 LDA     UMATLO
                 LDY     UMATLO+1
                 STA     UMATLO+1
@@ -7871,136 +7768,135 @@ STRMEX = STATSI+1
                 LDY     UMATHI+1
                 STA     UMATHI+1
                 STY     UMATHI
+
 .CLRMCO         LDA     MARKX
                 STA     NUMMAR
                 STZ     MARKX
                 JSR     STATUS
-
                 LDA     NUMMAR
 .MKRFEX         RTS
 
-.MKREFUSE       LDA     MARKX
+.MKREFUSE       
+                ;Complain if any marks are set.
+                LDA     MARKX
                 BEQ     MKRFEX
-
                 BRK
                 EQUB    $01
-
                 EQUS    "Mark(s) set"
-
                 EQUB    $00
 
-.NMBLOK         LDA     GE
+.NMBLOK         
+                ;Normalizes a marked block of text, to ease use.
+                ;Entry  -  Marks updated (gap fine positioned). TEXP =       GE
+                ;Exit   -  'Bad marking' error if 2 marks were set.
+                ;       -  EQ - 0 marks were set.
+                ;          NE - 1 mark was set (csr-mark or mark-csr):
+                ;               Gap moved to start of block,
+                ;               XY =       end of block.
+                LDA     GE
                 STA     TEXTP
                 LDA     GE+1
                 STA     TEXTP+1
                 LDA     NUMMAR
                 BEQ     NBLKEX
-
                 CMP     #$01
                 BNE     BADMARK
-
                 LDX     UMATLO
                 LDY     UMATHI
                 DEC     MARKSB
                 BNE     NBLKEX
-
                 JSR     GPBKXY
-
                 LDX     TEXTP
                 LDY     TEXTP+1
 .NBLKEX         RTS
 
-.DFINIT         JSR     TEMPSX
-
+.DFINIT         
+                ;Seperated this way to avoid grotty comand-line escape. 
+                JSR     TEMPSX
                 JSR     CLRMAK
-
                 CMP     #$02
                 BEQ     BADMARK
-
                 PHA
                 LDA     LINE
                 STA     SCRNX
                 PLA
                 RTS
 
-.dfblok         JSR     NMBLOK
-
+.dfblok         
+                ;Normalize a 'marked' block (defaulting to whole) of text.
+                ;Exit  -  TEXP =       Old cursor position (in end of text).
+                ;         ENDP =       End of 'marked' block.
+                JSR     NMBLOK
                 BNE     DBLKEP
-
                 JSR     STFILE
-
                 LDX     TMAX
                 LDY     TMAX+1
+
 .DBLKEP         STX     ENDP
                 STY     ENDP+1
 .DBLKEPX        RTS
 
-.MVBLOK         JSR     CLRMAK
-
+.MVBLOK         
+                ;Ensure good marking (m-m-c or c-m-m) for a block 'move-op'
+                ;Exit  -  CC: marks are after cursor
+                ;         CS: marks are before cursor
+                JSR     CLRMAK
                 CMP     #$02
                 BNE     BADMARK
-
+                ;if 2nd mark on cursor then shift it to GS
                 LDA     UMATLO+1
                 CMP     GE
                 BNE     MVBLOJ
-
                 LDA     UMATHI+1
                 CMP     GE+1
                 BNE     MVBLOJ
-
                 LDA     GS
                 STA     UMATLO+1
                 LDA     GS+1
                 STA     UMATHI+1
                 INC     MARKSB
+                
 .MVBLOJ         LDA     MARKSB
-                DEC     A
+                DEC     A         ; cmp#1
                 BNE     DBLKEPX
 
 .BADMARK        BRK
                 EQUB    $01
-
                 EQUS    "Bad marking"
-
                 EQUB    $00
 
 .SETMARK        JSR     FINEPO
-
                 LDX     MARKX
                 CPX     #$02
                 BEQ     BADMARK
-
+                ;Save mark address.
                 LDA     GE
                 STA     SMATLO,X
                 LDA     GE+1
                 STA     SMATHI,X
                 JSR     NORMAL
-
                 INC     MARKX
                 JMP     STATUS
 
 .CLEARMARKS     JSR     CLRMAK
-
                 JMP     NORMAL
 
 .MKDEL          JSR     CLRMAK
-
                 JSR     NMBLOK
-
-                BEQ     BADMARK
-
+                BEQ     BADMARK ;Stop delete from defaulting to 'NEW' !
                 STX     GE
                 STY     GE+1
                 JSR     MODIFY
 
 .NORMAX         JSR     NORMAL
-
                 LDA     STRING
                 STA     SCRNX
                 RTS
 
-.MKCPY          JSR     MVBLOK
-
+.MKCPY          
+                ;Marked copy. Either m-m-c or c-m-m
+                JSR     MVBLOK
+                ;XY =    (Mark2 - Mark1) - size of block to be copied.
                 SEC
                 LDA     UMATLO+1
                 SBC     UMATLO
@@ -8010,7 +7906,6 @@ STRMEX = STATSI+1
                 TAY
                 LDA     MARKSB
                 BEQ     MKCPYO
-
                 STX     STRING
                 STY     STRING+1
                 SEC
@@ -8026,8 +7921,9 @@ STRMEX = STATSI+1
                 LDA     SMATHI+1
                 SBC     STRING+1
                 STA     SMATHI+1
-.MKCPYO         JSR     CHECKR
 
+.MKCPYO         JSR     CHECKR
+                ;Copy the block, then normalize text.
                 LDA     UMATLO
                 STA     ARGP
                 LDA     UMATHI
@@ -8037,22 +7933,22 @@ STRMEX = STATSI+1
                 STY     GE+1
                 STY     VARP+1
                 JSR     CPFD2
-
                 LDX     #$01
                 STX     MODFLG
                 INX
                 STX     MARKX
                 JSR     STATUS
-
                 JMP     NORMAL
 
-.MKMVE          JSR     MVBLOK
-
+.MKMVE          
+                ;If marks are before cursor, then do a bit of tweaking to
+                ;change it into case where they are after it.
+                JSR     MVBLOK
+                ;Initialize pointers for iterative swap block routine.
                 LDX     UMATLO
                 LDY     UMATHI
                 LDA     MARKSB
                 BEQ     MVBEFC
-
                 STX     ARGP
                 STY     ARGP+1
                 LDA     UMATLO+1
@@ -8071,8 +7967,10 @@ STRMEX = STATSI+1
                 STA     ARGP+1
                 LDX     UMATLO+1
                 LDY     UMATHI+1
+
 .MVSTP3         STX     ENDP
                 STY     ENDP+1
+                
 .MVLOOP         SEC
                 LDA     VARP
                 SBC     ARGP
@@ -8089,24 +7987,21 @@ STRMEX = STATSI+1
                 CPX     SIZE
                 SBC     SIZE+1
                 BCS     MV2GE
-
                 STX     SIZE
                 STY     SIZE+1
+                
 .MV2GE          LDA     SIZE
                 ORA     SIZE+1
                 BEQ     MVNORM
-
                 BCS     MV2GE1
-
                 LDX     VARP
                 LDY     VARP+1
                 JSR     MVSWAP
-
                 CLC
                 TYA
                 ADC     TEMP
                 STA     ARGP
-                LDA     #$00
+                LDA     null
                 ADC     TEMP+1
                 STA     ARGP+1
                 BCC     MVLOOP
@@ -8121,26 +8016,26 @@ STRMEX = STATSI+1
                 STA     ENDP+1
                 TAY
                 JSR     MVSWAP
-
                 BRA     MVLOOP
 
-.MVNORM         LDA     #$05
+.MVNORM         LDA     FULLSCREEN   ; FULLSCREEN (#$05)
                 STA     UPDATE
                 JSR     NORMAL
-
                 JMP     MODIFY
 
-.MVSWAP         LDA     ARGP
+.MVSWAP         
+                ;Swap size bytes ARGP <-> XY 
+                LDA     ARGP
                 STA     TEMP
                 LDA     ARGP+1
                 STA     TEMP+1
                 STX     ADDR
                 STY     ADDR+1
-                INC     SIZE+1
-                LDY     #$00
+                INC     SIZE+1    ;TO allow dec to zero below.
+                LDY     null
+                
 .MVNINC         CPY     SIZE
                 BNE     MVSWLP
-
                 DEC     SIZE+1
                 BEQ     TEMPSE
 
@@ -8152,7 +8047,6 @@ STRMEX = STATSI+1
                 STA     (ADDR),Y
                 INY
                 BNE     MVNINC
-
                 INC     TEMP+1
                 INC     ADDR+1
                 BRA     MVNINC
@@ -8162,30 +8056,22 @@ STRMEX = STATSI+1
                 LDA     CURRLEN
                 CMP     SCRNX
                 BCS     TEMPSE
-
                 STA     SCRNX
 .TEMPSE         RTS
 
-.LBE3E          JSR     prompt
-
+.RepContPrompt  JSR     prompt
                 EQUS    "C(ontinue), E(nd of file replace), R(eplace) or ESCAPE"
-
                 EQUB    $EA
 
 .LBE78          RTS
 
-.LBE79          JSR     prompt
-
+.ReplPrompt     JSR     prompt
                 EQUS    "Replace by:"
-
                 EQUB    $EA
 
 .LBE88          JSR     READLS
-
                 JSR     readIN
-
                 JSR     MININIT
-
                 LDA     TINDEN
                 STA     BOLDRQ
                 JMP     REPLPART
